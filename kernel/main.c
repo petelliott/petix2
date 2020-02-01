@@ -1,5 +1,7 @@
 #include "tty.h"
 #include "multiboot.h"
+#include "tar.h"
+#include <stddef.h>
 
 
 void kmain(unsigned long magic, unsigned long addr) {
@@ -23,7 +25,19 @@ void kmain(unsigned long magic, unsigned long addr) {
         print((const char *) mods[i].cmdline);
         print("' at ");
         printx(mods[i].mod_start);
+        print("...");
+        printx(mods[i].mod_end);
         print("\n");
+
+        //TODO: load initrd based on name
+    }
+
+    for (struct tar *tar = (void *) mods[0].mod_start;
+         tar != NULL; tar = tar_next(tar)) {
+
+        print(tar->name);
+        print("\n");
+        print(tar_contents(tar));
     }
 
 }

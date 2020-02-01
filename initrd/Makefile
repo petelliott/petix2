@@ -3,5 +3,5 @@
 
 FILES=etc
 
-$(ROOT)/boot/initrd.tar:
-	tar  -cvf $@ -C $(ROOT) $(FILES)
+$(ROOT)/boot/initrd.tar.gz:
+	tar -b 1 -czvf $@ -C $(ROOT) $(FILES)
