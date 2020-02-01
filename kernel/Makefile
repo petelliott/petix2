@@ -2,7 +2,7 @@ CFLAGS += -ffreestanding
 
 include ../obj.mk
 
-OBJS=arch/$(ARCH)/boot.o main.o
+OBJS=arch/$(ARCH)/boot.o main.o debug.o
 
 $(ROOT)/boot/kernel: $(OBJS) kernel.ld
 	mkdir -p $(dir $@)
