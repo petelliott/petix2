@@ -59,6 +59,7 @@ struct tar {
 #define TOWRITE  00002          /* write by other */
 #define TOEXEC   00001          /* execute/search by other */
 
+size_t tar_field(const char *f);
 struct tar *tar_next(struct tar * header);
 const char *tar_contents(struct tar * header);
 
