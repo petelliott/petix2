@@ -1,7 +1,7 @@
 CC=i686-elf-gcc
 CFLAGS=-Wall -g -I$(shell pwd)/include/ -nostdlib -O2
 LIBS=-lgcc
-ROOT=$(shell pwd)/buildroot/
+ROOT=$(shell pwd)/buildroot
 ARCH=i686
 export
 
@@ -18,6 +18,6 @@ run:
 clean: subdir_clean
 	rm -r $(ROOT)
 
-DIRS=skel kernel
+DIRS=skel kernel initrd
 
 include subdirs.mk

@@ -1,10 +1,11 @@
-CONFS=boot/grub/grub.cfg
+CONFS=boot/grub/grub.cfg etc/motd
 
-ROOTCONFS=$(addprefix $(ROOT),$(CONFS))
+ROOTCONFS=$(addprefix $(ROOT)/,$(CONFS))
+
 
 all: $(ROOTCONFS)
 
-$(ROOT)%: %
+$(ROOT)/%: %
 	mkdir -p $(dir $@)
 	cp $^ $@
 
