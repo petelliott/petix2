@@ -1,5 +1,5 @@
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef TTY_H
+#define TTY_H
 
 /* Hardware text mode color constants. */
 enum vga_color {

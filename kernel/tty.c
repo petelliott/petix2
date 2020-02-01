@@ -1,10 +1,8 @@
-// raw vga printing, for before our tty is up
-#include "debug.h"
+#include "tty.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
 
 
 struct vga_entry {

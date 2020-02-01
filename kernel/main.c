@@ -1,5 +1,5 @@
 
-#include "debug.h"
+#include "tty.h"
 
 
 void kmain(void) {
