@@ -36,6 +36,7 @@ static size_t row, col;
 void term_clear(void) {
     row = 0;
     col = 0;
+    term_curto(row, col);
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
@@ -98,5 +99,18 @@ void warn(const char *str) {
 
 void error(const char *str) {
 	term_writes(str, VGA_COLOR_LIGHT_RED, VGA_COLOR_BLACK);
+    term_curto(row, col);
+}
+
+void printx(unsigned long n) {
+    print("0x");
+    for (int i = 2*sizeof(n) - 1; i >= 0; --i) {
+        int dig = (n >> (i*4)) & 0xf;
+        if (dig < 10) {
+            term_putchar(dig + '0', VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+        } else {
+            term_putchar((dig-10) + 'A', VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+        }
+    }
     term_curto(row, col);
 }

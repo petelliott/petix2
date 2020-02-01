@@ -29,5 +29,7 @@ void print(const char *str);
 void warn(const char *str);
 void error(const char *str);
 
+void printx(unsigned long n);
+
 
 #endif

@@ -1,17 +1,29 @@
-
 #include "tty.h"
+#include "multiboot.h"
 
 
-void kmain(void) {
+void kmain(unsigned long magic, unsigned long addr) {
 	term_clear();
 
-    print("hello\nhello\nhello\nhello\n");
-    warn("hello\nhello\nhello\nhello\n");
-    error("hello\nhello\nhello\nhello\n");
-    print("hello\nhello\nhello\nhello\n");
-    warn("hello\nhello\nhello\nhello\n");
-    error("hello\nhello\nhello\nhello\n");
+    if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
+        error("invalid magic number: ");
+        printx(magic);
+        print("\n");
+    } else {
+        print("correct multiboot magic number!\n");
+    }
 
-    print("hello\n");
+    multiboot_info_t *mbi = (multiboot_info_t *) addr;
+    print("multiboot info at "); printx(addr); print("\n");
+
+    multiboot_module_t *mods = (multiboot_module_t *) mbi->mods_addr;
+
+    for (int i = 0; i < mbi->mods_count; ++i) {
+        print("found module '");
+        print((const char *) mods[i].cmdline);
+        print("' at ");
+        printx(mods[i].mod_start);
+        print("\n");
+    }
 
 }
