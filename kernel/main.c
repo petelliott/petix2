@@ -2,6 +2,7 @@
 #include "multiboot.h"
 #include "tar.h"
 #include <stddef.h>
+#include <string.h>
 
 
 void kmain(unsigned long magic, unsigned long addr) {
@@ -29,7 +30,12 @@ void kmain(unsigned long magic, unsigned long addr) {
         printx(mods[i].mod_end);
         print("\n");
 
-        //TODO: load initrd based on name
+        printx(strcmp((const char *)mods[i].cmdline, "initrd"));
+        print("\n");
+        if (strcmp((const char *)mods[i].cmdline, "initrd") == 0) {
+            print("initializing initramfs\n");
+            //TODO: load initrd based on name
+        }
     }
 
     for (struct tar *tar = (void *) mods[0].mod_start;
