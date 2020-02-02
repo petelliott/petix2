@@ -15,10 +15,19 @@ static struct {
 
 static struct tar *fs;
 
+static bool initialized = false;
+
 void initramfs_init(struct tar *tar) {
     memset(fdtable, 0, sizeof(fdtable));
     fs = tar;
+    initialized = true;
 }
+
+bool initramfs_initialized(void) {
+    return initialized;
+}
+
+
 
 int initramfs_open(const char *pathname) {
     struct tar *tar;

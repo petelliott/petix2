@@ -9,5 +9,4 @@ void kprintf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 void kassert_internal(int tst, int line, const char *file, const char *tststr);
 void panic_internal(const char *str, int line, const char *file);
 
-
 #endif

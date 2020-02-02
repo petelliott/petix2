@@ -121,3 +121,22 @@ void kprintf(const char *fmt, ...) {
     }
     va_end(ap);
 }
+
+// TODO: portability
+static void halt() {
+    asm("cli");
+    while (1) {
+        asm("hlt");
+    }
+}
+
+void kassert_internal(int tst, int line, const char *file, const char *tststr) {
+    if (!tst) {
+        kprintf("kassert failed (%s:%i): %s\n", file, line, tststr);
+        halt();
+    }
+}
+
+void panic_internal(const char *str, int line, const char *file) {
+    kprintf("kernel panic (%s:%i): %s\n", file, line, str);
+}

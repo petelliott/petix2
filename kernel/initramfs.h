@@ -2,9 +2,11 @@
 #define INITRAMFS_H
 
 #include <sys/types.h>
+#include <stdbool.h>
 #include "tar.h"
 
 void initramfs_init(struct tar *tar);
+bool initramfs_initialized(void);
 
 int initramfs_open(const char *pathname);
 int initramfs_close(int fd);

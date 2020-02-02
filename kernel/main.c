@@ -9,19 +9,9 @@
 
 void kmain(unsigned long magic, unsigned long addr) {
 	tty_init();
-
-    int stk;
-    kprintf("approximate stack top: %p\n", &stk);
-
-
-    if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
-        kprintf("error: invalid magic number: %lX\n", magic);
-    } else {
-        kprintf("correct multiboot magic number!\n");
-    }
+    kassert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     multiboot_info_t *mbi = (multiboot_info_t *) addr;
-    kprintf("multiboot info at %lX\n", addr);
 
     multiboot_module_t *mods = (multiboot_module_t *) mbi->mods_addr;
 
@@ -36,8 +26,11 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
+    kassert(initramfs_initialized());
+
     kprintf("reading motd from initramfs\n");
     int fd = initramfs_open("etc/motd");
+    kassert(fd != -1);
     char buf[5];
     size_t nr;
     while ((nr = initramfs_read(fd, buf, 5)) != 0) {
@@ -45,7 +38,6 @@ void kmain(unsigned long magic, unsigned long addr) {
     }
     kprintf("\n");
     initramfs_close(fd);
-
 
     multiboot_memory_map_t *mems = (multiboot_memory_map_t *) mbi->mmap_addr;
     multiboot_memory_map_t *mend = ((void *) mems) + mbi->mmap_length;
