@@ -15,16 +15,14 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     multiboot_module_t *mods = (multiboot_module_t *) mbi->mods_addr;
 
-    for (int i = 0; i < mbi->mods_count; ++i) {
-        kprintf("found module '%s' at %X...%X\n",
-                (const char *) mods[i].cmdline,
-                mods[i].mod_start, mods[i].mod_end);
+    kassert(mbi->mods_count == 1);
 
-        if (strcmp((const char *)mods[i].cmdline, "initrd") == 0) {
-            kprintf("initializing initramfs\n");
-            initramfs_init((void *) mods[i].mod_start);
-        }
-    }
+    kprintf("found initramfs '%s' at %X...%X\n",
+            (const char *) mods[0].cmdline,
+            mods[0].mod_start, mods[0].mod_end);
+
+    kprintf("initializing initramfs\n");
+    initramfs_init((void *) mods[0].mod_start);
 
     kassert(initramfs_initialized());
 
