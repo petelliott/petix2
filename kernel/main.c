@@ -1,6 +1,7 @@
 #include "tty.h"
 #include "multiboot.h"
 #include "tar.h"
+#include "initramfs.h"
 #include "kdebug.h"
 #include <stddef.h>
 #include <string.h>
@@ -31,19 +32,20 @@ void kmain(unsigned long magic, unsigned long addr) {
 
         if (strcmp((const char *)mods[i].cmdline, "initrd") == 0) {
             kprintf("initializing initramfs\n");
-            //TODO: setup initramfs
+            initramfs_init((void *) mods[i].mod_start);
         }
     }
 
-    /*
-    for (struct tar *tar = (void *) mods[0].mod_start;
-         tar != NULL; tar = tar_next(tar)) {
-
-        print(tar->name);
-        print("\n");
-        print(tar_contents(tar));
+    kprintf("reading motd from initramfs\n");
+    int fd = initramfs_open("etc/motd");
+    char buf[5];
+    size_t nr;
+    while ((nr = initramfs_read(fd, buf, 5)) != 0) {
+        tty_write(buf, nr);
     }
-    */
+    kprintf("\n");
+    initramfs_close(fd);
+
 
     multiboot_memory_map_t *mems = (multiboot_memory_map_t *) mbi->mmap_addr;
     multiboot_memory_map_t *mend = ((void *) mems) + mbi->mmap_length;
@@ -53,9 +55,9 @@ void kmain(unsigned long magic, unsigned long addr) {
         if (m->type == MULTIBOOT_MEMORY_AVAILABLE) {
             kprintf("available memory: ");
         } else if (m->type == MULTIBOOT_MEMORY_RESERVED) {
-            kprintf("reserved memory : ");
+            kprintf("reserved  memory: ");
         } else if (m->type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) {
-            kprintf("acpi rec memory : ");
+            kprintf("acpi rec  memory: ");
         } else if (m->type == MULTIBOOT_MEMORY_NVS) {
             kprintf("NVS memory      : ");
         } else if (m->type == MULTIBOOT_MEMORY_BADRAM) {

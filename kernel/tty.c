@@ -110,7 +110,7 @@ static void term_putchar(char c) {
     }
 }
 
-size_t tty_write(const void *buf, size_t count) {
+ssize_t tty_write(const void *buf, size_t count) {
 
     for (size_t i = 0; i < count; ++i) {
         term_putchar(((const char *)buf)[i]);
