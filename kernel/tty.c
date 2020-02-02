@@ -4,6 +4,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* Hardware text mode color constants. */
+enum vga_color {
+	VGA_COLOR_BLACK = 0,
+	VGA_COLOR_BLUE = 1,
+	VGA_COLOR_GREEN = 2,
+	VGA_COLOR_CYAN = 3,
+	VGA_COLOR_RED = 4,
+	VGA_COLOR_MAGENTA = 5,
+	VGA_COLOR_BROWN = 6,
+	VGA_COLOR_LIGHT_GREY = 7,
+	VGA_COLOR_DARK_GREY = 8,
+	VGA_COLOR_LIGHT_BLUE = 9,
+	VGA_COLOR_LIGHT_GREEN = 10,
+	VGA_COLOR_LIGHT_CYAN = 11,
+	VGA_COLOR_LIGHT_RED = 12,
+	VGA_COLOR_LIGHT_MAGENTA = 13,
+	VGA_COLOR_LIGHT_BROWN = 14,
+	VGA_COLOR_WHITE = 15,
+};
 
 struct vga_entry {
     uint16_t ch : 8;
@@ -19,7 +38,7 @@ static inline void outb(unsigned int port, unsigned char value) {
    asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
 }
 
-void term_curto(size_t r, size_t c) {
+static void term_curto(size_t r, size_t c) {
     uint16_t pos = r * VGA_WIDTH + c;
 
 	outb(0x3D4, 0x0F);
@@ -30,13 +49,7 @@ void term_curto(size_t r, size_t c) {
 
 static struct vga_entry *term_buff = (struct vga_entry *) 0xB8000;
 
-static size_t row, col;
-
-
-void term_clear(void) {
-    row = 0;
-    col = 0;
-    term_curto(row, col);
+static void term_clear(void) {
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
@@ -46,7 +59,19 @@ void term_clear(void) {
 	}
 }
 
-void scroll_up(void) {
+static size_t row, col;
+static enum vga_color fg;
+static enum vga_color bg;
+
+void tty_init(void) {
+    term_clear();
+    row = col = 0;
+    term_curto(row, col);
+    fg = VGA_COLOR_LIGHT_GREY;
+    bg = VGA_COLOR_BLACK;
+}
+
+static void scroll_up(void) {
 	for (size_t y = 0; y < VGA_HEIGHT - 1; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
             term_buff[y*VGA_WIDTH + x] = term_buff[(y+1)*VGA_WIDTH + x];
@@ -60,11 +85,16 @@ void scroll_up(void) {
     row--;
 }
 
-
-void term_putchar(char c, enum vga_color fg, enum vga_color bg) {
+static void term_putchar(char c) {
     if (c == '\n') {
         ++row;
         col = 0;
+    } else if (c == '\r') {
+        col = 0;
+    } else if (c == '\t') {
+        col += 8;
+    } else if (c == '\e') {
+        //TODO: escape sequences
     } else {
         struct vga_entry *entry = &(term_buff[row*VGA_WIDTH+col]);
         entry->ch = c;
@@ -75,42 +105,16 @@ void term_putchar(char c, enum vga_color fg, enum vga_color bg) {
             ++row;
         }
     }
-    //TODO scroll
     if (row == VGA_HEIGHT) {
         scroll_up();
     }
 }
 
-void term_writes(const char *str, enum vga_color fg, enum vga_color bg) {
-    for (size_t i = 0; str[i]; ++i) {
-        term_putchar(str[i], fg, bg);
-    }
-}
+size_t tty_write(const void *buf, size_t count) {
 
-void print(const char *str) {
-	term_writes(str, VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-    term_curto(row, col);
-}
-
-void warn(const char *str) {
-	term_writes(str, VGA_COLOR_LIGHT_BROWN, VGA_COLOR_BLACK);
-    term_curto(row, col);
-}
-
-void error(const char *str) {
-	term_writes(str, VGA_COLOR_LIGHT_RED, VGA_COLOR_BLACK);
-    term_curto(row, col);
-}
-
-void printx(unsigned long n) {
-    print("0x");
-    for (int i = 2*sizeof(n) - 1; i >= 0; --i) {
-        int dig = (n >> (i*4)) & 0xf;
-        if (dig < 10) {
-            term_putchar(dig + '0', VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-        } else {
-            term_putchar((dig-10) + 'A', VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-        }
+    for (size_t i = 0; i < count; ++i) {
+        term_putchar(((const char *)buf)[i]);
     }
     term_curto(row, col);
+    return count;
 }

@@ -1,6 +1,6 @@
 include ../obj.mk
 
-OBJS=string/strcmp.o
+OBJS=string/strcmp.o string/strlen.o
 
 libc.a: $(OBJS)
 	$(AR) cr $@ $?
