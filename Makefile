@@ -18,6 +18,6 @@ run:
 clean: subdir_clean
 	rm -r $(ROOT)
 
-DIRS=skel kernel initrd
+DIRS=skel libc kernel initrd
 
 include subdirs.mk

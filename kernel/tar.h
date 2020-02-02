@@ -1,6 +1,8 @@
 #ifndef TAR_H
 #define TAR_H
 
+#include <stddef.h>
+
 // stolen from gnu tar manual
 struct tar {
   char name[100];               /*   0 */
