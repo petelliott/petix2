@@ -30,8 +30,6 @@ void kmain(unsigned long magic, unsigned long addr) {
         printx(mods[i].mod_end);
         print("\n");
 
-        printx(strcmp((const char *)mods[i].cmdline, "initrd"));
-        print("\n");
         if (strcmp((const char *)mods[i].cmdline, "initrd") == 0) {
             print("initializing initramfs\n");
             //TODO: load initrd based on name
@@ -46,4 +44,25 @@ void kmain(unsigned long magic, unsigned long addr) {
         print(tar_contents(tar));
     }
 
+    multiboot_memory_map_t *mems = (multiboot_memory_map_t *) mbi->mmap_addr;
+    multiboot_memory_map_t *mend = ((void *) mems) + mbi->mmap_length;
+
+    multiboot_memory_map_t *m;
+    for (m = mems; m < mend; m = ((void *) m) + m->size + 4) {
+        if (m->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            print("available memory: ");
+        } else if (m->type == MULTIBOOT_MEMORY_RESERVED) {
+            print("reserved memory : ");
+        } else if (m->type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) {
+            print("acpi rec memory : ");
+        } else if (m->type == MULTIBOOT_MEMORY_NVS) {
+            print("NVS memory      : ");
+        } else if (m->type == MULTIBOOT_MEMORY_BADRAM) {
+            print("bad memory      : ");
+        }
+        printx(m->addr);
+        print("...");
+        printx(m->addr + m->len);
+        print("\n");
+    }
 }
