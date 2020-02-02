@@ -9,6 +9,10 @@
 void kmain(unsigned long magic, unsigned long addr) {
 	tty_init();
 
+    int stk;
+    kprintf("approximate stack top: %p\n", &stk);
+
+
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
         kprintf("error: invalid magic number: %lX\n", magic);
     } else {

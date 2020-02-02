@@ -1,6 +1,7 @@
 #include "kdebug.h"
 #include "tty.h"
 #include <stdarg.h>
+#include <stdint.h>
 #include <string.h>
 
 static void kputc(char ch) {
@@ -104,6 +105,9 @@ void kprintf(const char *fmt, ...) {
                     break;
                 case 'c':
                     kputc(va_arg(ap, int));
+                    break;
+                case 'p':
+                    puthex(va_arg(ap, uintptr_t));
                     break;
                 case 'x':
                 case 'X':
