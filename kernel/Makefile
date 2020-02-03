@@ -1,7 +1,7 @@
 
 include ../obj.mk
 
-OBJS=arch/$(ARCH)/boot.o main.o tty.o tar.o kdebug.o initramfs.o
+OBJS=arch/$(ARCH)/boot.o main.o tty.o tar.o kdebug.o initramfs.o mem.o
 
 $(ROOT)/boot/kernel: $(OBJS) kernel.ld ../libc/libc.a
 	mkdir -p $(dir $@)

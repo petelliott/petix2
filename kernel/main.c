@@ -3,6 +3,7 @@
 #include "tar.h"
 #include "initramfs.h"
 #include "kdebug.h"
+#include "mem.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -26,6 +27,7 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     kassert(initramfs_initialized());
 
+    /*
     kprintf("reading motd from initramfs\n");
     int fd = initramfs_open("etc/motd");
     kassert(fd != -1);
@@ -36,23 +38,22 @@ void kmain(unsigned long magic, unsigned long addr) {
     }
     kprintf("\n");
     initramfs_close(fd);
+    */
 
     multiboot_memory_map_t *mems = (multiboot_memory_map_t *) mbi->mmap_addr;
     multiboot_memory_map_t *mend = ((void *) mems) + mbi->mmap_length;
 
     multiboot_memory_map_t *m;
     for (m = mems; m < mend; m = ((void *) m) + m->size + 4) {
-        if (m->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            kprintf("available memory: ");
-        } else if (m->type == MULTIBOOT_MEMORY_RESERVED) {
-            kprintf("reserved  memory: ");
-        } else if (m->type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) {
-            kprintf("acpi rec  memory: ");
-        } else if (m->type == MULTIBOOT_MEMORY_NVS) {
-            kprintf("NVS memory      : ");
-        } else if (m->type == MULTIBOOT_MEMORY_BADRAM) {
-            kprintf("bad memory      : ");
+        if (m->addr == 0x100000) {
+            // we only use this region for now.
+
+            //TODO: detect initbrk better.
+            kprintf("initializing memory manager\n");
+            kprintf("mem: %llX...%llX\n", m->addr, m->addr + m->len);
+            mem_init(m->addr, mods[0].mod_end, m->len);
+            kprintf("%lluMB free\n", m->len / (1024 * 1024));
+            break;
         }
-        kprintf("%llX...%llX\n", m->addr, m->addr + m->len);
     }
 }

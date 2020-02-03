@@ -9,7 +9,7 @@ export
 
 all: subdir
 
-iso:
+petix2.iso:
 	grub-mkrescue -o $@ $(ROOT)
 
 run:
