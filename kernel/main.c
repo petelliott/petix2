@@ -28,19 +28,6 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     kassert(initramfs_initialized());
 
-    /*
-    kprintf("reading motd from initramfs\n");
-    int fd = initramfs_open("etc/motd");
-    kassert(fd != -1);
-    char buf[5];
-    size_t nr;
-    while ((nr = initramfs_read(fd, buf, 5)) != 0) {
-        tty_write(buf, nr);
-    }
-    kprintf("\n");
-    initramfs_close(fd);
-    */
-
     multiboot_memory_map_t *mems = (multiboot_memory_map_t *) mbi->mmap_addr;
     multiboot_memory_map_t *mend = ((void *) mems) + mbi->mmap_length;
 

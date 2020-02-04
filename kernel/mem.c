@@ -64,7 +64,6 @@ page_t alloc_page(void) {
     }
 
     for (size_t i = nframes/(sizeof(size_t)*CHAR_BIT); i >= 0; --i) {
-        size_t off = i*sizeof(size_t)*CHAR_BIT;
         if (frames[i] != (size_t)-1) {
             size_t off = i*sizeof(size_t)*CHAR_BIT;
             size_t bit = __builtin_ctzl(~frames[i]);
