@@ -15,9 +15,6 @@ void mem_init(uintptr_t base, uintptr_t initbrk, uintptr_t length);
 int kbrk(void *addr);
 void *ksbrk(intptr_t increment);
 
-//void *kmalloc(size_t size);
-//void *krealloc(void *ptr);
-
 page_t alloc_page(void);
 void free_page(page_t page);
 

@@ -4,6 +4,7 @@
 #include "initramfs.h"
 #include "kdebug.h"
 #include "mem.h"
+#include "kmalloc.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -56,4 +57,5 @@ void kmain(unsigned long magic, unsigned long addr) {
             break;
         }
     }
+
 }
