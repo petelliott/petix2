@@ -1,6 +1,6 @@
 include ../obj.mk
 
-OBJS=string/strcmp.o string/strlen.o string/memset.o string/memcpy.o
+OBJS=string/strcmp.c.o string/strlen.c.o string/memset.c.o string/memcpy.c.o
 
 libc.a: $(OBJS)
 	$(AR) cr $@ $?

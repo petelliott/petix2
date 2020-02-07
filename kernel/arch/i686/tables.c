@@ -1,20 +1,5 @@
-#include "../interrupts.h"
-#include <stdint.h>
-
-struct gdt_descriptor {
-    uint16_t size;
-    uint32_t offset;
-} __attribute__((__packed__));
-
-struct gdt_entry {
-    uint16_t limit1;
-    uint16_t base1;
-    uint8_t  base2;
-    uint8_t  access_byte;
-    uint8_t  limit2 : 4;
-    uint8_t  flags  : 4;
-    uint8_t  base3;
-};
+#include "tables.h"
+#include "../../kdebug.h"
 
 static void set_gdt_base(struct gdt_entry *ent, uint32_t base) {
     ent->base1 = base & 0xffff;
@@ -30,8 +15,8 @@ static void set_gdt_limit(struct gdt_entry *ent, uint32_t limit) {
 static struct gdt_descriptor gdt_desc;
 static struct gdt_entry gdt_entries[5];
 
-static void setup_gdt(void) {
-    gdt_desc.size = 3;
+void setup_gdt(void) {
+    gdt_desc.size = 3*sizeof(struct gdt_entry) - 1;
     gdt_desc.offset = (uintptr_t) gdt_entries;
 
     // null descriptor
@@ -54,28 +39,9 @@ static void setup_gdt(void) {
 
     //TODO: tss
 
-    /*
-    asm volatile ("lgdt %0"
+    kprintf("%p\n", &gdt_desc);
+
+    asm volatile ("lgdt (%0)"
                   :
-                  : "a" (&gdt_desc));
-    */
+                  : "r" (&gdt_desc));
 }
-
-void init_interrupts(void) {
-    cli();
-    setup_gdt();
-}
-
-/* disable interrupts */
-void cli(void) {
-    asm("cli");
-}
-
-/* enable interrupts */
-void sti(void) {
-    asm("sti");
-}
-
-typedef void(*keypress_cb_t)(int scancode);
-
-void register_keypress(keypress_cb_t callback);

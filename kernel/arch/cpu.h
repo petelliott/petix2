@@ -1,7 +1,9 @@
-#ifndef INTERRUPTS_H
-#define INTERRUPTS_H
+#ifndef CPU_H
+#define CPU_H
 
-void init_interrupts(void);
+/* sets up the cpu/interrupts
+   disables interrupts */
+void init_cpu(void);
 
 /* disable interrupts */
 void cli(void);

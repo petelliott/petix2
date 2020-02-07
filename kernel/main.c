@@ -5,12 +5,14 @@
 #include "kdebug.h"
 #include "mem.h"
 #include "kmalloc.h"
+#include "arch/cpu.h"
 #include <stddef.h>
 #include <string.h>
 
 
 void kmain(unsigned long magic, unsigned long addr) {
 	tty_init();
+    init_cpu();
     kassert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     multiboot_info_t *mbi = (multiboot_info_t *) addr;

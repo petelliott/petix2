@@ -1,5 +1,5 @@
-%.o: %.s
+%.s.o: %.s
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-%.o: %.c
+%.c.o: %.c
 	$(CC) $(CFLAGS) -c $^ -o $@
