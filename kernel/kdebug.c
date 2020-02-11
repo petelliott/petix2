@@ -139,4 +139,5 @@ void kassert_internal(int tst, int line, const char *file, const char *tststr) {
 
 void panic_internal(const char *str, int line, const char *file) {
     kprintf("kernel panic (%s:%i): %s\n", file, line, str);
+    halt();
 }

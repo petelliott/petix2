@@ -1,0 +1,2 @@
+ata1-master: type=cdrom, path=./petix2.iso, status=inserted
+boot: cdrom

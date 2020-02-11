@@ -17,8 +17,17 @@ struct gdt_entry {
     uint8_t  base3;
 };
 
-void do_lgdt(struct gdt_descriptor *);
-
 void setup_gdt(void);
+
+struct idt_entry {
+	uint16_t offset1;
+	uint16_t selector;
+    uint8_t zero;
+	uint8_t type_attr;
+	uint16_t offset2;
+};
+
+void setup_idt(void);
+
 
 #endif

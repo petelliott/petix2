@@ -5,6 +5,7 @@
 void init_cpu(void) {
     cli();
     setup_gdt();
+    setup_idt();
 }
 
 /* disable interrupts */

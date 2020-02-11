@@ -10,6 +10,7 @@
 #include <string.h>
 
 
+
 void kmain(unsigned long magic, unsigned long addr) {
 	tty_init();
     init_cpu();
@@ -47,4 +48,9 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
+    sti();
+    asm("int $32");
+    asm("int $33");
+    asm("int $34");
+    asm("int $35");
 }
