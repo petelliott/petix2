@@ -1,6 +1,7 @@
 #include "interrupts.h"
 #include "../../kdebug.h"
 #include "io.h"
+#include <stddef.h>
 
 
 #define PIC1		0x20		/* IO base address for master PIC */
@@ -11,14 +12,33 @@
 #define PIC2_DATA	(PIC2+1)
 #define PIC_EOI		0x20		/* End-of-interrupt command code */
 
+void send_eoi(int irq) {
+    if(irq >= 8) {
+		outb(PIC2_COMMAND,PIC_EOI);
+    }
+
+	outb(PIC1_COMMAND,PIC_EOI);
+}
+
+keypress_cb_t keyboard_callback = NULL;
+
 void general_irq_handler(struct pushed_regs regs) {
-    kprintf("got irq: %i\n", regs.irq);
+    if (regs.irq != 0) {
+        kprintf("got irq: %i\n", regs.irq);
+    }
 
-    /* if(regs.irq >= 8) { */
-	/* 	outb(PIC2_COMMAND,PIC_EOI); */
-    /* } */
+    if (regs.irq == 1) {
+        // keyboard interrupt
 
-	/* outb(PIC1_COMMAND,PIC_EOI); */
+        //TODO reentrant interrupts
+        uint8_t sc = inb(0x60);
+        if (keyboard_callback != NULL) {
+            keyboard_callback(sc);
+        }
+        send_eoi(regs.irq);
+    } else {
+        send_eoi(regs.irq);
+    }
 }
 
 void general_exception_handler(struct pushed_regs regs) {

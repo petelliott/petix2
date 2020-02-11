@@ -49,8 +49,9 @@ void kmain(unsigned long magic, unsigned long addr) {
     }
 
     sti();
-    asm("int $32");
-    asm("int $33");
-    asm("int $34");
-    asm("int $35");
+    //asm("int $32");
+
+    for (;;) {
+        asm("hlt");
+    }
 }

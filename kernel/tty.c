@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "arch/cpu.h"
+#include "kdebug.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -59,6 +61,10 @@ static void term_clear(void) {
 	}
 }
 
+static void onkeypress(int scancode) {
+    kprintf("got scancode %x\n", scancode);
+}
+
 static size_t row, col;
 static enum vga_color fg;
 static enum vga_color bg;
@@ -69,6 +75,7 @@ void tty_init(void) {
     term_curto(row, col);
     fg = VGA_COLOR_LIGHT_GREY;
     bg = VGA_COLOR_BLACK;
+    register_keypress(onkeypress);
 }
 
 static void scroll_up(void) {

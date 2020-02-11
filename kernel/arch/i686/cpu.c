@@ -1,6 +1,7 @@
 #include "../cpu.h"
 #include <stdint.h>
 #include "tables.h"
+#include "interrupts.h"
 
 void init_cpu(void) {
     cli();
@@ -18,6 +19,6 @@ void sti(void) {
     asm("sti");
 }
 
-typedef void(*keypress_cb_t)(int scancode);
-
-void register_keypress(keypress_cb_t callback);
+void register_keypress(keypress_cb_t callback) {
+    keyboard_callback = callback;
+}

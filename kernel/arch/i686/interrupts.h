@@ -2,6 +2,7 @@
 #define INTERRUPTS_H
 
 #include <stdint.h>
+#include "../cpu.h"
 
 
 struct pushed_regs {
@@ -16,6 +17,8 @@ struct pushed_regs {
     uint32_t ecx;
     uint32_t eax;
 } __attribute__((packed));
+
+extern keypress_cb_t keyboard_callback;
 
 void general_irq_handler(struct pushed_regs regs);
 void general_exception_handler(struct pushed_regs regs);
