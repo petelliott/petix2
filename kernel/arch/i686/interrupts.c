@@ -12,7 +12,7 @@
 #define PIC2_DATA	(PIC2+1)
 #define PIC_EOI		0x20		/* End-of-interrupt command code */
 
-void send_eoi(int irq) {
+static void send_eoi(int irq) {
     if(irq >= 8) {
 		outb(PIC2_COMMAND,PIC_EOI);
     }
@@ -22,7 +22,13 @@ void send_eoi(int irq) {
 
 keypress_cb_t keyboard_callback = NULL;
 
-void general_irq_handler(struct pushed_regs regs) {
+static interrupt_handler_t handlers[256] = {0};
+
+void register_interrupt_handler(int vecn, interrupt_handler_t handler) {
+    handlers[vecn] = handler;
+}
+
+void general_interrupt_handler(struct pushed_regs regs) {
     if (regs.irq != 0) {
         kprintf("got irq: %i\n", regs.irq);
     }
@@ -89,54 +95,3 @@ void PIC_remap(int offset1, int offset2) {
 	outb(PIC1_DATA, a1);   // restore saved masks.
 	outb(PIC2_DATA, a2);
 }
-
-uintptr_t isrs[48] = {
-    (uintptr_t) excep0,
-    (uintptr_t) excep1,
-    (uintptr_t) excep2,
-    (uintptr_t) excep3,
-    (uintptr_t) excep4,
-    (uintptr_t) excep5,
-    (uintptr_t) excep6,
-    (uintptr_t) excep7,
-    (uintptr_t) excep8,
-    (uintptr_t) excep9,
-    (uintptr_t) excep10,
-    (uintptr_t) excep11,
-    (uintptr_t) excep12,
-    (uintptr_t) excep13,
-    (uintptr_t) excep14,
-    (uintptr_t) excep15,
-    (uintptr_t) excep16,
-    (uintptr_t) excep17,
-    (uintptr_t) excep18,
-    (uintptr_t) excep19,
-    (uintptr_t) excep20,
-    (uintptr_t) excep21,
-    (uintptr_t) excep22,
-    (uintptr_t) excep23,
-    (uintptr_t) excep24,
-    (uintptr_t) excep25,
-    (uintptr_t) excep26,
-    (uintptr_t) excep27,
-    (uintptr_t) excep28,
-    (uintptr_t) excep29,
-    (uintptr_t) excep30,
-    (uintptr_t) excep31,
-    (uintptr_t) irq0,
-    (uintptr_t) irq1,
-    (uintptr_t) irq2,
-    (uintptr_t) irq3,
-    (uintptr_t) irq4,
-    (uintptr_t) irq5,
-    (uintptr_t) irq6,
-    (uintptr_t) irq7,
-    (uintptr_t) irq8,
-    (uintptr_t) irq9,
-    (uintptr_t) irq10,
-    (uintptr_t) irq11,
-    (uintptr_t) irq12,
-    (uintptr_t) irq13,
-    (uintptr_t) irq14,
-    (uintptr_t) irq15
-};

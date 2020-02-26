@@ -60,7 +60,7 @@ void setup_idt(void) {
     idt_desc.offset = (uintptr_t) idt_entries;
 
     PIC_remap(32,40);
-    for (size_t i = 0; i < 48; ++i) {
+    for (size_t i = 0; i < 255; ++i) {
         idt_entries[i].offset1   = isrs[i] & 0xffff;
         idt_entries[i].selector  = (1 << 3);
         idt_entries[i].zero      = 0;
