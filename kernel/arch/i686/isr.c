@@ -6,8 +6,8 @@
     ".globl isr_" #vecn "\n"                      \
     "isr_" #vecn ":\n"                            \
     "    pushal\n"                                \
-    "    pushw $" #irq "\n"                       \
-    "    pushw $" #excep "\n"                     \
+    "    pushl $" #irq "\n"                       \
+    "    pushl $" #excep "\n"                     \
     "    pushl $" #vecn "\n"                      \
     "    call general_interrupt_handler\n"        \
     "    add $0x8, %esp\n"                        \

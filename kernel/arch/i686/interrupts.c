@@ -12,7 +12,7 @@
 #define PIC2_DATA	(PIC2+1)
 #define PIC_EOI		0x20		/* End-of-interrupt command code */
 
-static void send_eoi(int irq) {
+void send_eoi(int irq) {
     if(irq >= 8) {
 		outb(PIC2_COMMAND,PIC_EOI);
     }
@@ -20,36 +20,39 @@ static void send_eoi(int irq) {
 	outb(PIC1_COMMAND,PIC_EOI);
 }
 
-keypress_cb_t keyboard_callback = NULL;
+static interrupt_handler_t handlers[256];
 
-static interrupt_handler_t handlers[256] = {0};
+void clear_interrupt_handlers(void) {
+    for (size_t i = 0; i < 256; ++i) {
+        handlers[i] = NULL;
+    }
+}
 
 void register_interrupt_handler(int vecn, interrupt_handler_t handler) {
     handlers[vecn] = handler;
 }
 
+
 void general_interrupt_handler(struct pushed_regs regs) {
-    if (regs.irq != 0) {
-        kprintf("got irq: %i\n", regs.irq);
-    }
-
-    if (regs.irq == 1) {
-        // keyboard interrupt
-
-        //TODO reentrant interrupts
-        uint8_t sc = inb(0x60);
-        if (keyboard_callback != NULL) {
-            keyboard_callback(sc);
+    if (handlers[regs.vecn] != NULL) {
+        kprintf("bbb\n");
+        handlers[regs.vecn](regs.vecn, regs.exception, regs.irq);
+    } else if (regs.irq != -1) {
+        kprintf("ccc\n");
+        if (regs.irq != 0) {
+           kprintf("got unhandled irq: %i\n",
+                   regs.irq);
+           send_eoi(regs.irq);
         }
-        send_eoi(regs.irq);
+    } else if (regs.exception != -1) {
+        kprintf("ddd\n");
+        kprintf("got exception: %i, error_code=%lx\n",
+                regs.exception, regs.error_code);
+        panic("unhandled exception");
     } else {
-        send_eoi(regs.irq);
+        kprintf("got unhandled interrupt: %li\n", regs.vecn);
     }
-}
-
-void general_exception_handler(struct pushed_regs regs) {
-    kprintf("got exception: %i\n", regs.exception);
-    panic("unhandlable exception");
+    kprintf("exiting");
 }
 
 // from osdev wiki

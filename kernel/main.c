@@ -48,10 +48,11 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
+
     sti();
-    //asm("int $32");
 
     for (;;) {
-        asm("hlt");
+        halt();
+        kprintf("asdfasd\n");
     }
 }

@@ -7,8 +7,8 @@
 
 struct pushed_regs {
     int32_t  vecn;
-    int16_t  exception;
-    int16_t  irq;
+    int32_t  exception;
+    int32_t  irq;
     uint32_t edi;
     uint32_t esi;
     uint32_t ebp;
@@ -17,13 +17,15 @@ struct pushed_regs {
     uint32_t edx;
     uint32_t ecx;
     uint32_t eax;
+    uint32_t error_code; // undefined value if there is no error code.
 } __attribute__((packed));
 
-extern keypress_cb_t keyboard_callback;
+typedef void(*interrupt_handler_t)(int vecn, int exception, int irq);
 
-typedef void(*interrupt_handler_t)(int exception, int irq);
+void send_eoi(int irq);
 
-// it is the callee's responsibility to reenable interrupts
+void clear_interrupt_handlers(void);
+
 void register_interrupt_handler(int vecn, interrupt_handler_t handler);
 
 void general_interrupt_handler(struct pushed_regs regs);

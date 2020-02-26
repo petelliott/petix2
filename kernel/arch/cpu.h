@@ -10,6 +10,8 @@ void cli(void);
 /* enable interrupts */
 void sti(void);
 
+void halt(void);
+
 typedef void(*keypress_cb_t)(int scancode);
 
 void register_keypress(keypress_cb_t callback);

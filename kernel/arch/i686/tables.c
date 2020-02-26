@@ -2,6 +2,7 @@
 #include "../../kdebug.h"
 #include "interrupts.h"
 #include <stddef.h>
+#include "isr.h"
 
 static void set_gdt_base(struct gdt_entry *ent, uint32_t base) {
     ent->base1 = base & 0xffff;
@@ -37,8 +38,8 @@ void setup_gdt(void) {
     gdt_entries[1].access_byte = 0x9A;
 
     // data
-    set_gdt_base(gdt_entries + 1, 0);
-    set_gdt_limit(gdt_entries + 1, 0xffffffff >> 12);
+    set_gdt_base(gdt_entries + 2, 0);
+    set_gdt_limit(gdt_entries + 2, 0xffffffff >> 12);
     gdt_entries[2].flags = 0xC;
     gdt_entries[2].access_byte = 0x92;
 
@@ -60,7 +61,7 @@ void setup_idt(void) {
     idt_desc.offset = (uintptr_t) idt_entries;
 
     PIC_remap(32,40);
-    for (size_t i = 0; i < 255; ++i) {
+    for (size_t i = 0; i < 256; ++i) {
         idt_entries[i].offset1   = isrs[i] & 0xffff;
         idt_entries[i].selector  = (1 << 3);
         idt_entries[i].zero      = 0;
