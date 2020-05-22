@@ -49,7 +49,6 @@ void general_interrupt_handler(struct pushed_regs regs) {
     } else {
         kprintf("got unhandled interrupt: %li\n", regs.vecn);
     }
-    sti();
 }
 
 // from osdev wiki
