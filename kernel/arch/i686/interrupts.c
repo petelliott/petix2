@@ -35,24 +35,21 @@ void register_interrupt_handler(int vecn, interrupt_handler_t handler) {
 
 void general_interrupt_handler(struct pushed_regs regs) {
     if (handlers[regs.vecn] != NULL) {
-        kprintf("bbb\n");
         handlers[regs.vecn](regs.vecn, regs.exception, regs.irq);
     } else if (regs.irq != -1) {
-        kprintf("ccc\n");
         if (regs.irq != 0) {
-           kprintf("got unhandled irq: %i\n",
+           kprintf("got unhandled irq: %li\n",
                    regs.irq);
-           send_eoi(regs.irq);
         }
+        send_eoi(regs.irq);
     } else if (regs.exception != -1) {
-        kprintf("ddd\n");
-        kprintf("got exception: %i, error_code=%lx\n",
+        kprintf("got exception: %li, error_code=%lx\n",
                 regs.exception, regs.error_code);
         panic("unhandled exception");
     } else {
         kprintf("got unhandled interrupt: %li\n", regs.vecn);
     }
-    kprintf("exiting");
+    sti();
 }
 
 // from osdev wiki

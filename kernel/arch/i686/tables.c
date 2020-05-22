@@ -50,6 +50,18 @@ void setup_gdt(void) {
     asm volatile ("lgdt (%0)"
                   :
                   : "r" (&gdt_desc));
+
+    // set the segment registers correctly
+    asm ("    jmp $0x8, $gdt_next\n"
+         "gdt_next:\n"
+         "    mov $0x10, %%ax\n"
+         "    mov %%ax, %%ds\n"
+         "    mov %%ax, %%es\n"
+         "    mov %%ax, %%fs\n"
+         "    mov %%ax, %%gs\n"
+         "    mov %%ax, %%ss\n"
+         ::: "eax"); // clobbers eax
+
 }
 
 static struct gdt_descriptor idt_desc;

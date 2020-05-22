@@ -48,11 +48,9 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
-
     sti();
 
     for (;;) {
         halt();
-        kprintf("asdfasd\n");
     }
 }

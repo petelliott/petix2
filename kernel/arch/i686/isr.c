@@ -1,5 +1,6 @@
 #include "isr.h"
 
+//TODO pop error code once we start handling exceptions
 #define make_isr(vecn, excep, irq)                \
     extern void isr_##vecn(void);                 \
     asm(                                          \
@@ -9,8 +10,9 @@
     "    pushl $" #irq "\n"                       \
     "    pushl $" #excep "\n"                     \
     "    pushl $" #vecn "\n"                      \
+    "    cld\n"                                   \
     "    call general_interrupt_handler\n"        \
-    "    add $0x8, %esp\n"                        \
+    "    add $0xc, %esp\n"                        \
     "    popal\n"                                 \
     "    iret\n");
 
