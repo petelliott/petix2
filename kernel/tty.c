@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include "arch/cpu.h"
 #include "kdebug.h"
 
@@ -61,9 +62,7 @@ static void term_clear(void) {
 	}
 }
 
-static void onkeypress(int scancode) {
-    kprintf("got scancode %x\n", scancode);
-}
+static void onkeypress(int scancode);
 
 static size_t row, col;
 static enum vga_color fg;
@@ -92,6 +91,7 @@ static void scroll_up(void) {
     row--;
 }
 
+// output functions
 static void term_putchar(char c) {
     if (c == '\n') {
         ++row;
@@ -100,6 +100,13 @@ static void term_putchar(char c) {
         col = 0;
     } else if (c == '\t') {
         col += 8;
+    } else if (c == '\b') {
+        if (--col == -1) {
+            col = VGA_WIDTH;
+            --row;
+        }
+        struct vga_entry *entry = &(term_buff[row*VGA_WIDTH+col]);
+        entry->ch = ' ';
     } else if (c == '\e') {
         //TODO: escape sequences
     } else {
@@ -124,4 +131,113 @@ ssize_t tty_write(const void *buf, size_t count) {
     }
     term_curto(row, col);
     return count;
+}
+
+
+// input functions
+
+// stolen from serenityos
+static const char en_map[0x80] = {
+    0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',
+    '=', 0x08, '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
+    '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
+    ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',',
+    '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,
+};
+
+static const char en_shift_map[0x80] = {
+    0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_',
+    '+', 0x08, '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+    '{', '}', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
+    ':', '"', '~', 0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<',
+    '>', '?', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, '|', 0, 0, 0,
+};
+
+#define BUFF_LEN 2048
+
+static char filebuff[BUFF_LEN]; // probably make this grow
+static size_t fbase = 0;
+static size_t lbase  = 0;
+static size_t loff   = 0;
+
+static bool shifted = false;
+
+static char sc_to_ascii(int scancode) {
+    if (shifted) {
+        return en_shift_map[scancode];
+    } else {
+        return en_map[scancode];
+    }
+}
+
+
+// interrupt handler
+static void onkeypress(int scancode) {
+    if (scancode == 0x36) {
+        shifted = true;
+    } else if (scancode == 0xb6) {
+        shifted = false;
+    } else if (scancode < 0x80) {
+        char ch = sc_to_ascii(scancode);
+        if (ch != 0) {
+            if (ch == '\b') {
+                if (loff != lbase) {
+                    loff = (((loff - 1)%BUFF_LEN)+BUFF_LEN) % BUFF_LEN;
+                    tty_write("\b", 1);
+                }
+            } else {
+
+                filebuff[loff] = ch;
+                loff = (loff+1) % BUFF_LEN;
+                tty_write(&ch, 1);
+
+                if (ch == '\n') {
+                    lbase = loff;
+                }
+            }
+        }
+    }
+}
+
+#define MIN(a, b) ((a < b)? a:b)
+
+ssize_t tty_read(void *buf, size_t count) {
+    ssize_t c = count;
+    while (count > 0) {
+        cli();
+        if (lbase > fbase) {
+            size_t start = fbase;
+            size_t len = MIN(lbase-fbase, count);
+            fbase += len;
+            sti();
+
+            memcpy(buf, filebuff+start, len);
+            count -= len;
+            buf += len;
+        } else if (lbase < fbase) {
+            size_t start1 = fbase;
+            size_t len1 = MIN(BUFF_LEN - fbase, count);
+            fbase += len1;
+            fbase %= BUFF_LEN;
+            count -= len1;
+            size_t start2 = fbase;
+            size_t len2 = MIN(lbase - 0, count);
+            fbase += len1;
+            fbase %= BUFF_LEN;
+            count -= len1;
+            sti();
+
+            memcpy(buf, filebuff+start1, len1);
+            memcpy(buf+len1, filebuff+start2, len2);
+            buf += len1+len2;
+        }
+        sti();
+        //TODO replace with a scheduled lock
+        if (count > 0) {
+            halt();
+        }
+    }
+    return c;
 }

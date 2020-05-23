@@ -50,6 +50,12 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     sti();
 
+    char ch;
+    while (1) {
+        tty_read(&ch, 1);
+        tty_write(&ch, 1);
+    }
+
     for (;;) {
         halt();
     }
