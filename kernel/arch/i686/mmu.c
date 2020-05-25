@@ -2,16 +2,21 @@
 #include "../../kdebug.h"
 #include <stddef.h>
 
-void *virt_to_phys(const void *virt) {
-    uint32_t addr = (uint32_t) virt;
 
-    uint32_t offset  = addr & 0xfff;
-    uint32_t tab_idx = (addr >> 12) & 0x003ff;
-    uint32_t dir_idx = addr >> 22;
-
+struct page_dir_ent *get_page_dir(void) {
     struct page_dir_ent *pde;
     asm volatile ("mov %%cr3, %0"
                   : "=r" (pde));
+    return pde;
+}
+
+void *virt_to_phys(const void *virt) {
+    uint32_t addr = (uint32_t) virt;
+
+    uint32_t dir_idx, tab_idx, offset;
+    split_addr(addr, dir_idx, tab_idx, offset);
+
+    struct page_dir_ent *pde = get_page_dir();
 
     struct page_tab_ent pte = ((struct page_tab_ent *)(uint32_t)
                                pde[dir_idx].page_table)[tab_idx];

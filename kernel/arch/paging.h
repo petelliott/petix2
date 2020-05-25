@@ -13,5 +13,6 @@ void free_proc_addr_space(addr_space_t as);
 
 void fork_proc_addr_space(addr_space_t as);
 
+void use_addr_space(addr_space_t as);
 
 #endif

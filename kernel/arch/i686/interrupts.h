@@ -20,7 +20,7 @@ struct pushed_regs {
     uint32_t error_code; // undefined value if there is no error code.
 } __attribute__((packed));
 
-typedef void(*interrupt_handler_t)(int vecn, int exception, int irq);
+typedef void(*interrupt_handler_t)(struct pushed_regs *regs);
 
 void send_eoi(int irq);
 

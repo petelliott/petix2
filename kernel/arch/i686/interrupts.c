@@ -35,7 +35,7 @@ void register_interrupt_handler(int vecn, interrupt_handler_t handler) {
 
 void general_interrupt_handler(struct pushed_regs regs) {
     if (handlers[regs.vecn] != NULL) {
-        handlers[regs.vecn](regs.vecn, regs.exception, regs.irq);
+        handlers[regs.vecn](&regs);
     } else if (regs.irq != -1) {
         if (regs.irq != 0) {
            kprintf("got unhandled irq: %li\n",

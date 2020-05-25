@@ -1,7 +1,7 @@
 #include "isr.h"
 
 //TODO pop error code once we start handling exceptions
-#define make_isr(vecn, excep, irq)                \
+#define make_isr_base(vecn, excep, irq, str)      \
     extern void isr_##vecn(void);                 \
     asm(                                          \
     ".globl isr_" #vecn "\n"                      \
@@ -14,7 +14,12 @@
     "    call general_interrupt_handler\n"        \
     "    add $0xc, %esp\n"                        \
     "    popal\n"                                 \
+    str                                           \
     "    iret\n");
+
+#define make_isr(vecn, excep, irq) make_isr_base(vecn, excep, irq, "")
+#define make_isr_popec(vecn, excep, irq) \
+    make_isr_base(vecn, excep, irq, "    add $4, %esp\n")
 
 #define get_isr(vecn) (uintptr_t) isr_##vecn
 
@@ -27,16 +32,16 @@ make_isr(4, 4, -1);
 make_isr(5, 5, -1);
 make_isr(6, 6, -1);
 make_isr(7, 7, -1);
-make_isr(8, 8, -1);
+make_isr_popec(8, 8, -1);
 make_isr(9, 9, -1);
-make_isr(10, 10, -1);
-make_isr(11, 11, -1);
-make_isr(12, 12, -1);
-make_isr(13, 13, -1);
-make_isr(14, 14, -1);
+make_isr_popec(10, 10, -1);
+make_isr_popec(11, 11, -1);
+make_isr_popec(12, 12, -1);
+make_isr_popec(13, 13, -1);
+make_isr_popec(14, 14, -1);
 make_isr(15, 15, -1);
 make_isr(16, 16, -1);
-make_isr(17, 17, -1);
+make_isr_popec(17, 17, -1);
 make_isr(18, 18, -1);
 make_isr(19, 19, -1);
 make_isr(20, 20, -1);
@@ -49,7 +54,7 @@ make_isr(26, 26, -1);
 make_isr(27, 27, -1);
 make_isr(28, 28, -1);
 make_isr(29, 29, -1);
-make_isr(30, 30, -1);
+make_isr_popec(30, 30, -1);
 make_isr(31, 31, -1);
 
 make_isr(32, -1, 0);

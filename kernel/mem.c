@@ -82,3 +82,11 @@ void free_page(page_t page) {
     }
     set_bit(frames, page-mem_base/PAGE_SIZE, false);
 }
+
+void *alloc_page_ptr(void) {
+    return (void *) (alloc_page() << 12);
+}
+
+void free_page_ptr(void *page) {
+    free_page(((uintptr_t) page) >> 12);
+}

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include "io.h"
 
-static void keypress_int_handler(int vecn, int excep, int irq);
+static void keypress_int_handler(struct pushed_regs *regs);
 
 void init_cpu(void) {
     cli();
@@ -31,13 +31,13 @@ void halt(void) {
 
 static keypress_cb_t keyboard_callback = NULL;
 
-static void keypress_int_handler(int vecn, int excep, int irq) {
+static void keypress_int_handler(struct pushed_regs *regs) {
     cli();
     uint8_t sc = inb(0x60);
     if (keyboard_callback != NULL) {
         keyboard_callback(sc);
     }
-    send_eoi(irq);
+    send_eoi(regs->irq);
     sti();
 }
 

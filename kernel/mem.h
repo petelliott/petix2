@@ -18,4 +18,7 @@ void *ksbrk(intptr_t increment);
 page_t alloc_page(void);
 void free_page(page_t page);
 
+void *alloc_page_ptr(void);
+void free_page_ptr(void *page);
+
 #endif

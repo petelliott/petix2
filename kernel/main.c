@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "kmalloc.h"
 #include "arch/cpu.h"
+#include "arch/paging.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -49,6 +50,17 @@ void kmain(unsigned long magic, unsigned long addr) {
     }
 
     sti();
+
+    /*
+    addr_space_t as = create_proc_addr_space();
+    use_addr_space(as);
+    volatile uint32_t a = *(uint32_t *)0xc1000000;
+    kprintf("eyyy: %lx\n", a);
+    a = *(uint32_t *)0xc1000008;
+    kprintf("eyyy: %lx\n", a);
+
+    free_proc_addr_space(as);
+    */
 
     char ch;
     while (1) {

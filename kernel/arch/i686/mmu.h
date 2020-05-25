@@ -39,6 +39,12 @@ struct page_tab_ent {
 #define PAGE_MASK 0xfff
 #define PAGE_SHIFT 12
 
+#define split_addr(addr,d,t,o) {                \
+        o  = (addr) & 0xfff;                    \
+        t = ((addr) >> 12) & 0x003ff;           \
+        d = (addr) >> 22;                       \
+    }
+
 typedef struct {
     struct page_dir_ent ents[1024];
 } __attribute__((aligned(4096))) page_dir_t;
@@ -47,6 +53,7 @@ typedef struct {
     struct page_tab_ent ents[1024];
 } __attribute__((aligned(4096))) page_tab_t;
 
+struct page_dir_ent *get_page_dir(void);
 void *virt_to_phys(const void *virt);
 
 /* loads a memory map and flushes tlb*/
