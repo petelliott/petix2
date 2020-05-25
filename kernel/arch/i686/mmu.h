@@ -12,7 +12,8 @@ struct page_dir_ent {
     uint32_t accessed      : 1;
     uint32_t zero          : 1;
     uint32_t size          : 1;
-    uint32_t ignored       : 4;
+    uint32_t petix_alloc   : 1; // allocate a page table if we fault on this
+    uint32_t ignored       : 3;
     uint32_t page_table    : 20;
 };
 
@@ -26,12 +27,25 @@ struct page_tab_ent {
     uint32_t dirty         : 1;
     uint32_t zero          : 1;
     uint32_t global        : 1;
-    uint32_t ignored       : 3;
+    uint32_t petix_alloc   : 1; // allocate a page if we fault on this
+    uint32_t ignored       : 2;
     uint32_t addr          : 20;
 };
 
-typedef struct page_dir_ent page_dir_t[1024];
-typedef struct page_tab_ent page_tab_t[1024];
+#define PDIR_SIZE 1024
+#define PTAB_SIZE 1024
+
+#define PAGE_SIZE 4096
+#define PAGE_MASK 0xfff
+#define PAGE_SHIFT 12
+
+typedef struct {
+    struct page_dir_ent ents[1024];
+} __attribute__((aligned(4096))) page_dir_t;
+
+typedef struct {
+    struct page_tab_ent ents[1024];
+} __attribute__((aligned(4096))) page_tab_t;
 
 void *virt_to_phys(const void *virt);
 

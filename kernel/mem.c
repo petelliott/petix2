@@ -1,4 +1,5 @@
 #include "mem.h"
+#include "arch/paging.h"
 #include <limits.h>
 #include <string.h>
 #include <stdbool.h>
@@ -28,6 +29,8 @@ void mem_init(uintptr_t base, uintptr_t initbrk, uintptr_t length) {
 
     memset(frames, 0, sizeof_frames);
     free_stack_top = 0;
+
+    init_paging();
 }
 
 int kbrk(void *addr) {

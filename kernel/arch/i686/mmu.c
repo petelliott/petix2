@@ -22,7 +22,7 @@ void *virt_to_phys(const void *virt) {
     }
 }
 
-/* loads a memory map and flushes tlb*/
+/* loads a memory map and flushes tlb */
 void load_page_dir(struct page_dir_ent *dir) {
     uintptr_t val = (uintptr_t) dir;
     kassert((val & (4096 - 1)) == 0);
