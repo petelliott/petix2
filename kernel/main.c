@@ -49,9 +49,12 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
+
     sti();
 
     /*
+    kprintf("ret %li\n", raw_syscall(SYS_NR_DB_PRINT, "heyyyy"));
+
     addr_space_t as = create_proc_addr_space();
     use_addr_space(as);
     volatile uint32_t a = *(uint32_t *)0xc1000000;

@@ -1,6 +1,5 @@
 #include "isr.h"
 
-//TODO pop error code once we start handling exceptions
 #define make_isr_base(vecn, excep, irq, str)      \
     extern void isr_##vecn(void);                 \
     asm(                                          \

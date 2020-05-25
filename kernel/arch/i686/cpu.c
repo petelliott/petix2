@@ -4,6 +4,7 @@
 #include "interrupts.h"
 #include <stddef.h>
 #include "io.h"
+#include "syscall.h"
 
 static void keypress_int_handler(struct pushed_regs *regs);
 
@@ -13,6 +14,7 @@ void init_cpu(void) {
     setup_gdt();
     setup_idt();
     register_interrupt_handler(33, keypress_int_handler);
+    register_interrupt_handler(0x80, syscall_interrupt_handler);
 }
 
 /* disable interrupts */
