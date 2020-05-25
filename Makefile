@@ -20,6 +20,6 @@ clean: subdir_clean
 	rm -r $(ROOT)
 	rm petix2.iso || true
 
-DIRS=skel libc kernel initrd
+DIRS=skel libc kernel initrd bin
 
 include subdirs.mk

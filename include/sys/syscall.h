@@ -1,6 +1,8 @@
 #ifndef SYS_SYSCALL_H
 #define SYS_SYSCALL_H
 
+#include <stddef.h>
+
 #define SYSCALL_INT_NUM 0x80
 
 enum syscall_nums {

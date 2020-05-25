@@ -4,6 +4,7 @@
 
 void syscall_interrupt_handler(struct pushed_regs *regs) {
     kassert(regs->eax < 256);
+    kassert(syscall_table[regs->eax] != NULL);
     size_t ret = syscall_table[regs->eax](
                      regs->ebx,
                      regs->ecx,
