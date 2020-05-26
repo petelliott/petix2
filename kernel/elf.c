@@ -3,8 +3,8 @@
 #include <string.h>
 
 uint8_t correct_e_ident[ELF_NIDENT] = {
-    0x75, 'E', 'L', 'F',
-    [EI_CLASS]      = 0,
+    0x7f, 'E', 'L', 'F',
+    [EI_CLASS]      = 1,
     [EI_DATA]       = 1,
     [EI_VERSION]    = 1,
     [EI_OSABI]      = 0x00,
@@ -19,7 +19,7 @@ uintptr_t load_elf_file(const void *file) {
     const Elf32_Ehdr *hdr = file;
 
     //TODO this shouldn't be a kassert
-    kassert(check_elf_header(file));
+    kassert(check_elf_header(hdr));
     kassert(hdr->e_type == ET_EXEC);
 
     const Elf32_Phdr *phdrs = (file + hdr->e_phoff);

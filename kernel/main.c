@@ -7,6 +7,7 @@
 #include "kmalloc.h"
 #include "arch/cpu.h"
 #include "arch/paging.h"
+#include "syscall.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -64,6 +65,8 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     free_proc_addr_space(as);
     */
+
+    sys_exec("bin/init");
 
     char ch;
     while (1) {

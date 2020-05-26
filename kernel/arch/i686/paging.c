@@ -53,8 +53,6 @@ static void page_fault_handler(struct pushed_regs *regs) {
     uintptr_t linaddr;
     asm ("mov %%cr2, %0": "=r" (linaddr));
 
-    kprintf("page fault, pfla=%lx\n", linaddr);
-
     if ((regs->error_code & 0x9) != 0) {
         kprintf("unrecoverable page fault. pfla=%lx, ec=%lx\n",
                 linaddr, regs->error_code);

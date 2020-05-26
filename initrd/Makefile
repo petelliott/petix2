@@ -3,7 +3,7 @@
 
 all: $(ROOT)/boot/initrd.tar $(ROOT)/boot/initrd.tar.gz
 
-FILES=etc
+FILES=etc bin
 
 $(ROOT)/boot/initrd.tar:
 	tar -b 1 -cvf $@ -C $(ROOT) $(FILES)
