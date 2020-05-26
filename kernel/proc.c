@@ -1,5 +1,6 @@
 #include "proc.h"
 #include "kdebug.h"
+#include "sync.h"
 
 #define PTABLE_SIZE 1024
 
@@ -36,6 +37,8 @@ struct pcb *get_pcb(pid_t pid) {
 }
 
 struct pcb *alloc_proc(void) {
+    acquire_global();
+
     size_t init_off = pt_free;
 
     while (ptable[pt_free].rs != RS_NOPROC) {
@@ -44,10 +47,14 @@ struct pcb *alloc_proc(void) {
         kassert(pt_free != init_off);
     }
 
-    ptable[pt_free].rs = RS_CREATED;
-    ptable[pt_free].pid = make_pid(pid_gen(ptable[pt_free].pid) + 1, pt_free);
+    struct pcb *pcb = &(ptable[pt_free]);
 
-    return &(ptable[pt_free]);
+    pcb->rs = RS_CREATED;
+    pcb->pid = make_pid(pid_gen(pcb->pid) + 1, pt_free);
+
+    release_global();
+
+    return pcb;
 }
 
 

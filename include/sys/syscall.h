@@ -7,6 +7,7 @@
 
 enum syscall_nums {
     SYS_NR_EXEC     = 59,
+    SYS_NR_EXIT     = 60,
     SYS_NR_DB_PRINT = 255
 };
 

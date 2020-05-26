@@ -23,6 +23,7 @@ struct pcb {
     pid_t ppid;
     uintptr_t stack_ptr;
     enum ready_state rs;
+    uint8_t return_code;
     //TODO all kinds of other stuff
 };
 
