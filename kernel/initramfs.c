@@ -29,6 +29,21 @@ bool initramfs_initialized(void) {
 
 
 
+const void *initramfs_getptr(const char *pathname) {
+    struct tar *tar;
+    for (tar = (void *) fs; tar != NULL; tar = tar_next(tar)) {
+        if (strcmp(tar->name, pathname) == 0) {
+            break;
+        }
+    }
+
+    if (tar == NULL) {
+        return NULL;
+    } else {
+        return tar_contents(tar);
+    }
+}
+
 int initramfs_open(const char *pathname) {
     struct tar *tar;
     for (tar = (void *) fs; tar != NULL; tar = tar_next(tar)) {
