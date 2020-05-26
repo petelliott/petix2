@@ -63,4 +63,10 @@ void sched(void) {
 }
 
 // fork process proc into another process
-struct pcb *proc_fork(struct pcb *proc);
+struct pcb *proc_fork(struct pcb *proc) {
+    struct pcb *newproc = alloc_proc();
+    newproc->ppid = proc->pid;
+    newproc->addr_space = fork_proc_addr_space(proc->addr_space);
+    newproc->stack_ptr = proc->stack_ptr;
+    return newproc;
+}

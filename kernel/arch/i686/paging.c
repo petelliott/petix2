@@ -132,7 +132,32 @@ void free_proc_addr_space(addr_space_t as) {
     free_page_ptr(as);
 }
 
-void fork_proc_addr_space(addr_space_t as);
+addr_space_t fork_proc_addr_space(addr_space_t as) {
+    struct page_dir_ent *dir = alloc_page_ptr();
+    memcpy(dir, as, PAGE_SIZE);
+
+    for (size_t i = identity_len; i < PDIR_SIZE; ++i) {
+        if (as[i].present && as[i].petix_alloc) {
+            struct page_tab_ent *old_tab =
+                (void *) (as[i].page_table << PAGE_SHIFT);
+            struct page_tab_ent *tab = alloc_page_ptr();
+            memcpy(tab, old_tab, PAGE_SIZE);
+
+            dir[i].page_table = (uintptr_t) tab >> PAGE_SHIFT;
+
+            for (size_t j = 0; j < PTAB_SIZE; ++j) {
+                if (tab[j].present && tab[j].petix_alloc) {
+                    void *oldpage = (void *) (tab[i].addr << PAGE_SHIFT);
+                    void *page = alloc_page_ptr();
+                    memcpy(page, oldpage, PAGE_SIZE);
+                    tab[j].addr = (uintptr_t) page >> PAGE_SHIFT;
+                }
+            }
+        }
+    }
+
+    return dir;
+}
 
 void use_addr_space(addr_space_t as) {
     load_page_dir(as);

@@ -11,6 +11,7 @@ size_t sys_db_print(const char *str);
 
 size_t sys_exec(const char *path);
 size_t sys_exit(size_t code);
+size_t sys_fork(void);
 
 
 #endif
