@@ -4,6 +4,7 @@
 #include "arch/paging.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef size_t pid_t;
 

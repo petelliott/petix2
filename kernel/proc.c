@@ -51,7 +51,9 @@ struct pcb *alloc_proc(void) {
 }
 
 
-void sched(void);
+void sched(void) {
+    panic("TODO: write scheduler");
+}
 
 // fork process proc into another process
 struct pcb *proc_fork(struct pcb *proc);

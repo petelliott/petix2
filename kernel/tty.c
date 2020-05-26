@@ -6,6 +6,7 @@
 #include <string.h>
 #include "arch/cpu.h"
 #include "kdebug.h"
+#include "sync.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -206,12 +207,12 @@ static void onkeypress(int scancode) {
 ssize_t tty_read(void *buf, size_t count) {
     ssize_t c = count;
     while (count > 0) {
-        cli();
+        acquire_global();
         if (lbase > fbase) {
             size_t start = fbase;
             size_t len = MIN(lbase-fbase, count);
             fbase += len;
-            sti();
+            release_global();
 
             memcpy(buf, filebuff+start, len);
             count -= len;
@@ -227,13 +228,14 @@ ssize_t tty_read(void *buf, size_t count) {
             fbase += len1;
             fbase %= BUFF_LEN;
             count -= len1;
-            sti();
+            release_global();
 
             memcpy(buf, filebuff+start1, len1);
             memcpy(buf+len1, filebuff+start2, len2);
             buf += len1+len2;
+        } else {
+            release_global();
         }
-        sti();
         //TODO replace with a scheduled lock
         if (count > 0) {
             halt();

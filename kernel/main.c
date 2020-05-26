@@ -9,12 +9,15 @@
 #include "arch/paging.h"
 #include "syscall.h"
 #include "proc.h"
+#include "sync.h"
 #include <stddef.h>
 #include <string.h>
 
 
 
 void kmain(unsigned long magic, unsigned long addr) {
+    acquire_global();
+
 	tty_init();
     init_cpu();
     kassert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
@@ -52,7 +55,8 @@ void kmain(unsigned long magic, unsigned long addr) {
     }
 
 
-    sti();
+    //sti();
+    release_global();
 
     /*
     kprintf("ret %li\n", raw_syscall(SYS_NR_DB_PRINT, "heyyyy"));
