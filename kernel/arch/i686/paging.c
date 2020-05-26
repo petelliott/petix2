@@ -115,6 +115,10 @@ addr_space_t create_proc_addr_space(void) {
 }
 
 void free_proc_addr_space(addr_space_t as) {
+    if (as == NULL) {
+        return;
+    }
+
     for (size_t i = identity_len; i < PDIR_SIZE; ++i) {
         if (as[i].present && as[i].petix_alloc) {
             struct page_tab_ent *pte = (void *) (as[i].page_table << PAGE_SHIFT);

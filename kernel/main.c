@@ -8,6 +8,7 @@
 #include "arch/cpu.h"
 #include "arch/paging.h"
 #include "syscall.h"
+#include "proc.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -66,6 +67,7 @@ void kmain(unsigned long magic, unsigned long addr) {
     free_proc_addr_space(as);
     */
 
+    init_proc();
     sys_exec("bin/init");
 
     char ch;
