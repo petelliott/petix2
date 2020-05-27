@@ -70,16 +70,23 @@ void sched(void) {
 
     size_t ioff = (pid_off(curpid) + 1) % PTABLE_SIZE;
     size_t off = ioff;
+
+    bool blocked_p = false;
+
     while (ptable[off].rs != RS_READY) {
+        blocked_p = blocked_p || (ptable[off].rs == RS_BLOCKED);
         off = (off + 1) % PTABLE_SIZE;
 
         if (off == ioff) {
             // out of pids, sleep until an interrupt changes that
-            kprintf("no processes; halting until interrupt\n");
-            release_global();
-            panic("TODO");
-            halt();
-            acquire_global();
+            if (blocked_p) {
+                kprintf("no processes; halting until interrupt\n");
+                release_global();
+                halt();
+                acquire_global();
+            } else {
+                panic("no running procs. TODO: shutdown");
+            }
         }
     }
 

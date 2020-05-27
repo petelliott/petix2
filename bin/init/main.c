@@ -5,6 +5,7 @@ int main() {
     if (ret == 0) {
         return raw_syscall(SYS_NR_DB_PRINT, "hello from child");
     } else {
+        raw_syscall(SYS_NR_SCHED_YIELD);
         return raw_syscall(SYS_NR_DB_PRINT, "hello from parent");
     }
 }

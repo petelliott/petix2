@@ -9,6 +9,7 @@
 #include "sync.h"
 
 syscall_t syscall_table[256] = {
+    [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK] = sys_fork,
     [SYS_NR_EXEC] = sys_exec,
     [SYS_NR_EXIT] = sys_exit,
@@ -18,6 +19,30 @@ syscall_t syscall_table[256] = {
 size_t sys_db_print(const char *str) {
     kprintf("sys_db_print (pid=%li): \"%s\"\n", get_pid(), str);
     return 4;
+}
+
+size_t sys_sched_yield(void) {
+    sched();
+    return 0;
+}
+
+size_t sys_fork(void) {
+    struct pcb *old = get_pcb(get_pid());
+    struct pcb *new = alloc_proc();
+
+    acquire_global();
+    new->ppid = old->pid;
+    new->rs = RS_READY;
+
+    fork_switchable(&(new->stack_ptr), old->addr_space, &(new->addr_space));
+
+    if (get_pid() == new->pid) {
+        release_global();
+        return 0;
+    } else {
+        release_global();
+        return new->pid;
+    }
 }
 
 size_t sys_exec(const char *path) {
@@ -57,23 +82,4 @@ size_t sys_exit(size_t code) {
 
     //should be unreachable
     return 4;
-}
-
-size_t sys_fork(void) {
-    struct pcb *old = get_pcb(get_pid());
-    struct pcb *new = alloc_proc();
-
-    acquire_global();
-    new->ppid = old->pid;
-    new->rs = RS_READY;
-
-    fork_switchable(&(new->stack_ptr), old->addr_space, &(new->addr_space));
-
-    if (get_pid() == new->pid) {
-        release_global();
-        return 0;
-    } else {
-        release_global();
-        return new->pid;
-    }
 }
