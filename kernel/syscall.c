@@ -16,7 +16,7 @@ syscall_t syscall_table[256] = {
 };
 
 size_t sys_db_print(const char *str) {
-    kprintf("sys_db_print: \"%s\"\n", str);
+    kprintf("sys_db_print (pid=%li): \"%s\"\n", get_pid(), str);
     return 4;
 }
 
@@ -28,12 +28,20 @@ size_t sys_exec(const char *path) {
     pcb->addr_space = create_proc_addr_space();
     use_addr_space(pcb->addr_space);
 
+    //TODO: this is the worst way to set up a stack
+    volatile char b;
+    b = *(char *) 0xfffff000;
+    b = *(char *) 0xffffe000;
+    b = *(char *) 0xffffd000;
+    b = *(char *) 0xffffc000;
+
     const void *file = initramfs_getptr(path);
     kassert(file != NULL);
 
     uintptr_t entry = load_elf_file(file);
 
-    asm volatile ("mov 0xffffffff, %%esp\n"
+
+    asm volatile ("mov $0xfffffff0, %%esp\n"
                   "jmp *%0\n"
                   ::"r" (entry));
     // should be unreachable
@@ -62,6 +70,7 @@ size_t sys_fork(void) {
     fork_switchable(&(new->stack_ptr), old->addr_space, &(new->addr_space));
 
     if (get_pid() == new->pid) {
+        release_global();
         return 0;
     } else {
         release_global();

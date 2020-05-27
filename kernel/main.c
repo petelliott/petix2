@@ -58,6 +58,7 @@ void kmain(unsigned long magic, unsigned long addr) {
     //sti();
     release_global();
 
+
     /*
     kprintf("ret %li\n", raw_syscall(SYS_NR_DB_PRINT, "heyyyy"));
 
@@ -72,6 +73,8 @@ void kmain(unsigned long magic, unsigned long addr) {
     */
 
     init_proc();
+
+
     sys_exec("bin/init");
 
     char ch;

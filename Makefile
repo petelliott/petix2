@@ -16,6 +16,13 @@ run:
 	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \
 	                 -kernel $(ROOT)/boot/kernel
 
+gdb:
+	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \
+	                 -kernel $(ROOT)/boot/kernel \
+	                 -S -s &
+	sleep 1
+	gdb -x .gdbinit
+
 clean: subdir_clean
 	rm -r $(ROOT)
 	rm petix2.iso || true

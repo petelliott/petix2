@@ -1,6 +1,8 @@
 #include "proc.h"
 #include "kdebug.h"
 #include "sync.h"
+#include "arch/cpu.h"
+#include "arch/switch.h"
 
 #define PTABLE_SIZE 1024
 
@@ -59,5 +61,34 @@ struct pcb *alloc_proc(void) {
 
 
 void sched(void) {
-    panic("TODO: write scheduler");
+    acquire_global();
+
+    struct pcb *curpcb = &(ptable[pid_off(curpid)]);
+    if (curpcb->rs == RS_RUNNING) {
+        curpcb->rs = RS_READY;
+    }
+
+    size_t ioff = (pid_off(curpid) + 1) % PTABLE_SIZE;
+    size_t off = ioff;
+    while (ptable[off].rs != RS_READY) {
+        off = (off + 1) % PTABLE_SIZE;
+
+        if (off == ioff) {
+            // out of pids, sleep until an interrupt changes that
+            kprintf("no processes; halting until interrupt\n");
+            release_global();
+            panic("TODO");
+            halt();
+            acquire_global();
+        }
+    }
+
+    struct pcb *newpcb = &(ptable[off]);
+    newpcb->rs = RS_RUNNING;
+    curpid = newpcb->pid;
+
+    //panic("debu");
+    context_switch(newpcb->stack_ptr, &(curpcb->stack_ptr), newpcb->addr_space);
+
+    release_global();
 }

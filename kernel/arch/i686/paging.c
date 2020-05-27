@@ -53,6 +53,9 @@ static void page_fault_handler(struct pushed_regs *regs) {
     uintptr_t linaddr;
     asm ("mov %%cr2, %0": "=r" (linaddr));
 
+    //kprintf("page fault: pfla=%lx, ec=%lx\n",
+    //        linaddr, regs->error_code);
+
     if ((regs->error_code & 0x9) != 0) {
         kprintf("unrecoverable page fault. pfla=%lx, ec=%lx\n",
                 linaddr, regs->error_code);
@@ -147,8 +150,9 @@ addr_space_t fork_proc_addr_space(addr_space_t as) {
 
             for (size_t j = 0; j < PTAB_SIZE; ++j) {
                 if (tab[j].present && tab[j].petix_alloc) {
-                    void *oldpage = (void *) (tab[i].addr << PAGE_SHIFT);
+                    void *oldpage = (void *) (tab[j].addr << PAGE_SHIFT);
                     void *page = alloc_page_ptr();
+
                     memcpy(page, oldpage, PAGE_SIZE);
                     tab[j].addr = (uintptr_t) page >> PAGE_SHIFT;
                 }
