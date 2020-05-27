@@ -3,8 +3,10 @@
 #include <sys/syscall.h>
 #include "initramfs.h"
 #include "arch/paging.h"
+#include "arch/switch.h"
 #include "elf.h"
 #include "proc.h"
+#include "sync.h"
 
 syscall_t syscall_table[256] = {
     [SYS_NR_FORK] = sys_fork,
@@ -50,5 +52,19 @@ size_t sys_exit(size_t code) {
 }
 
 size_t sys_fork(void) {
+    struct pcb *old = get_pcb(get_pid());
+    struct pcb *new = alloc_proc();
 
+    acquire_global();
+    new->ppid = old->pid;
+    new->rs = RS_READY;
+
+    fork_switchable(&(new->stack_ptr), old->addr_space, &(new->addr_space));
+
+    if (get_pid() == new->pid) {
+        return 0;
+    } else {
+        release_global();
+        return new->pid;
+    }
 }

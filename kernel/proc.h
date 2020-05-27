@@ -38,7 +38,5 @@ struct pcb *alloc_proc(void);
 
 void sched(void);
 
-// fork process proc into another process
-struct pcb *proc_fork(struct pcb *proc);
 
 #endif
