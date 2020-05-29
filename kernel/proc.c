@@ -15,6 +15,10 @@ static size_t pt_free = 0;
 
 static pid_t curpid;
 
+static void timer_handler(void) {
+    sched();
+}
+
 // sets up an empty process, ready for exec
 void init_proc(void) {
     struct pcb *pcb = alloc_proc();
@@ -22,6 +26,10 @@ void init_proc(void) {
     pcb->ppid = pcb->pid;
     pcb->addr_space = NULL;
     pcb->rs = RS_RUNNING;
+
+
+    register_timer(timer_handler);
+    set_cpu_interval(100000);
 }
 
 pid_t get_pid(void) {
