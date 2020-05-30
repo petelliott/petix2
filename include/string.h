@@ -54,6 +54,10 @@ char *strstr(const char *s1, const char *s2);
 char *strtok(char * restrict s1,
              const char * restrict s2);
 
+char *strtok_r(char * restrict str,
+               const char * restrict delim,
+               char * restrict *save);
+
 void *memset(void *s, int c, size_t n);
 
 const char *strerror(int errnum);
