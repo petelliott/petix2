@@ -6,4 +6,9 @@
 typedef long ssize_t;
 typedef long long off_t;
 
+typedef uint32_t dev_t;
+#define MAJOR(dev) (((dev) >> 16) & 0xffff)
+#define MINOR(dev) ((dev) & 0xffff)
+#define MKDEV(ma, mi) (((ma) << 16) | (mi))
+
 #endif

@@ -56,7 +56,7 @@ char *strtok(char * restrict s1,
 
 void *memset(void *s, int c, size_t n);
 
-char *strerror(int errnum);
+const char *strerror(int errnum);
 
 size_t strlen(const char *s);
 

@@ -4,11 +4,12 @@
 extern int errno;
 
 enum errno_ns {
-    EPERM = 1,
+    EPERM  = 1,
     ENOENT = 2,
-    ESRCH = 3,
-    EINTR = 4,
-    EIO   = 5,
+    ESRCH  = 3,
+    EINTR  = 4,
+    EIO    = 5,
+    ENXIO  = 6,
 
     EISDIR = 21,
     EINVAL = 22,

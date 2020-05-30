@@ -7,6 +7,7 @@ static const char * const errtab[] = {
     [ESRCH]  = "No such process",
     [EINTR]  = "Interrupted system call",
     [EIO]    = "Input/output error",
+    [ENXIO]  = "No such device or address",
     [EISDIR] = "Is a directory",
     [EINVAL] = "Invalid argument",
 };
