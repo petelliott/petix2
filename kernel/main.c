@@ -11,6 +11,7 @@
 #include "sync.h"
 #include <stddef.h>
 #include <string.h>
+#include "device/initrd.h"
 
 
 
@@ -31,6 +32,9 @@ void kmain(unsigned long magic, unsigned long addr) {
             (const char *) mods[0].cmdline,
             mods[0].mod_start, mods[0].mod_end);
 
+    initrd_init((void *)mods[0].mod_start, (void *)mods[0].mod_end);
+
+    //TODO remove initramfs
     kprintf("initializing initramfs\n");
     initramfs_init((void *) mods[0].mod_start);
 

@@ -1,6 +1,7 @@
 #include "fs.h"
 #include "kdebug.h"
 #include <errno.h>
+#include <unistd.h>
 
 
 static struct file_ops const * devices[256];
@@ -36,4 +37,18 @@ int register_device(int major, const struct file_ops *ops) {
     kassert(major < 256 && major >= 0);
     devices[major] = ops;
     return 0;
+}
+
+off_t fs_default_lseek(struct file *f, off_t off, int whence) {
+    if (whence == SEEK_SET) {
+        f->offset = off;
+    } else if (whence == SEEK_CUR) {
+        f->offset += off;
+    } else if (whence == SEEK_END) {
+        f->offset = f->size + off;
+    } else {
+        return -EINVAL;
+    }
+
+    return f->offset;
 }

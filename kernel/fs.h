@@ -67,4 +67,7 @@ int fs_open(struct inode *in, struct file *f);
 
 int register_device(int major, const struct file_ops *ops);
 
+
+off_t fs_default_lseek(struct file *f, off_t off, int whence);
+
 #endif
