@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "sync.h"
 
 #define PAGE_SIZE 4096
 
@@ -18,7 +19,16 @@ void *ksbrk(intptr_t increment);
 page_t alloc_page(void);
 void free_page(page_t page);
 
+
 void *alloc_page_ptr(void);
 void free_page_ptr(void *page);
+
+extern petix_lock_t memlock;
+
+page_t alloc_page_sync(void);
+void free_page_sync(page_t page);
+
+void *alloc_page_ptr_sync(void);
+void free_page_ptr_sync(void *page);
 
 #endif

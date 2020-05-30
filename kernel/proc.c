@@ -27,9 +27,10 @@ void init_proc(void) {
     pcb->addr_space = NULL;
     pcb->rs = RS_RUNNING;
 
-
     register_timer(timer_handler);
     set_cpu_interval(100000);
+
+    enable_sched_locks();
 }
 
 pid_t get_pid(void) {

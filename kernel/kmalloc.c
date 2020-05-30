@@ -192,3 +192,23 @@ void kfree(void *ptr) {
         }
     }
 }
+
+void *kmalloc_sync(size_t size) {
+    acquire_lock(&memlock);
+    void *km = kmalloc(size);
+    release_lock(&memlock);
+    return km;
+}
+
+void *krealloc_sync(void *ptr, size_t size) {
+    acquire_lock(&memlock);
+    void *km = krealloc(ptr, size);
+    release_lock(&memlock);
+    return km;
+}
+
+void kfree_sync(void *ptr) {
+    acquire_lock(&memlock);
+    kfree(ptr);
+    release_lock(&memlock);
+}

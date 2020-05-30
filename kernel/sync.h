@@ -6,6 +6,8 @@
 void acquire_global(void);
 void release_global(void);
 
+bool is_global_held(void);
+
 struct proc_lst {
     pid_t pid;
     struct proc_lst *next;
@@ -22,7 +24,6 @@ void enable_sched_locks(void);
 
 void acquire_lock(petix_lock_t *lock);
 void release_lock(petix_lock_t *lock);
-
 
 typedef struct {
     struct proc_lst *lst;

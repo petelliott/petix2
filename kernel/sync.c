@@ -21,6 +21,10 @@ void release_global(void) {
     }
 }
 
+bool is_global_held(void) {
+    return acq_depth != 0;
+}
+
 static bool slocks = false;
 
 void enable_sched_locks(void) {
@@ -45,6 +49,10 @@ void acquire_lock(petix_lock_t *lock) {
             release_global();
             sched();
             return;
+        } else {
+            lock->locked = true;
+            lock->held_by = get_pid();
+            lock->global = false;
         }
     } else {
         kassert(lock->locked == false);
@@ -64,6 +72,7 @@ void release_lock(petix_lock_t *lock) {
         lock->locked = false;
     } else {
         if (!(lock->locked && (lock->held_by == get_pid() || lock->global))) {
+            kprintf("%i, %i, %i\n", lock->locked, lock->held_by, lock->global);
             panic("attempt to release un-acquired lock");
         } else if (lock->locked) {
             lock->locked = false;
@@ -73,6 +82,7 @@ void release_lock(petix_lock_t *lock) {
                 struct pcb *pcb = get_pcb(lst->pid);
                 pcb->rs = RS_READY;
             }
+            lock->lst = NULL;
         }
     }
 

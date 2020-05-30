@@ -4,7 +4,6 @@
 #include "initramfs.h"
 #include "kdebug.h"
 #include "mem.h"
-#include "kmalloc.h"
 #include "arch/cpu.h"
 #include "arch/paging.h"
 #include "syscall.h"

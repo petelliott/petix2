@@ -49,6 +49,8 @@ void init_paging(void) {
 
 
 static void page_fault_handler(struct pushed_regs *regs) {
+    acquire_global();
+
     struct page_dir_ent *pd = get_page_dir();
     uintptr_t linaddr;
     asm ("mov %%cr2, %0": "=r" (linaddr));
@@ -102,10 +104,12 @@ static void page_fault_handler(struct pushed_regs *regs) {
         tab[tab_idx].addr = (uint32_t) page >> PAGE_SHIFT;
     }
 
+
+    release_global();
 }
 
 addr_space_t create_proc_addr_space(void) {
-    struct page_dir_ent *pd = alloc_page_ptr();
+    struct page_dir_ent *pd = alloc_page_ptr_sync();
     memcpy(pd, kpagedir.ents, PAGE_SIZE);
 
     // null initialized pages above to 0xc000000
@@ -126,16 +130,18 @@ void free_proc_addr_space(addr_space_t as) {
         if (as[i].present && as[i].petix_alloc) {
             struct page_tab_ent *pte = (void *) (as[i].page_table << PAGE_SHIFT);
             for (size_t j = 0; j < PTAB_SIZE; ++j) {
-                free_page(pte[i].addr);
+                free_page_sync(pte[i].addr);
             }
 
-            free_page(as[i].page_table);
+            free_page_sync(as[i].page_table);
         }
     }
-    free_page_ptr(as);
+    free_page_ptr_sync(as);
 }
 
 addr_space_t fork_proc_addr_space(addr_space_t as) {
+    acquire_global();
+
     struct page_dir_ent *dir = alloc_page_ptr();
     memcpy(dir, as, PAGE_SIZE);
 
@@ -160,6 +166,7 @@ addr_space_t fork_proc_addr_space(addr_space_t as) {
         }
     }
 
+    release_global();
     return dir;
 }
 

@@ -90,3 +90,32 @@ void *alloc_page_ptr(void) {
 void free_page_ptr(void *page) {
     free_page(((uintptr_t) page) >> 12);
 }
+
+
+petix_lock_t memlock;
+
+page_t alloc_page_sync(void) {
+    acquire_lock(&memlock);
+    page_t p = alloc_page();
+    release_lock(&memlock);
+    return p;
+}
+
+void free_page_sync(page_t page) {
+    acquire_lock(&memlock);
+    free_page(page);
+    release_lock(&memlock);
+}
+
+void *alloc_page_ptr_sync(void) {
+    acquire_lock(&memlock);
+    void *m = alloc_page_ptr();
+    release_lock(&memlock);
+    return m;
+}
+
+void free_page_ptr_sync(void *page) {
+    acquire_lock(&memlock);
+    free_page_ptr(page);
+    release_lock(&memlock);
+}
