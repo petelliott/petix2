@@ -1,7 +1,6 @@
 #include "tty.h"
 #include "multiboot.h"
 #include "tar.h"
-#include "initramfs.h"
 #include "kdebug.h"
 #include "mem.h"
 #include "arch/cpu.h"
@@ -35,13 +34,8 @@ void kmain(unsigned long magic, unsigned long addr) {
             (const char *) mods[0].cmdline,
             mods[0].mod_start, mods[0].mod_end);
 
+    kprintf("loading initrd\n");
     initrd_init((void *)mods[0].mod_start, (void *)mods[0].mod_end);
-
-    //TODO remove initramfs
-    kprintf("initializing initramfs\n");
-    initramfs_init((void *) mods[0].mod_start);
-
-    kassert(initramfs_initialized());
 
     multiboot_memory_map_t *mems = (multiboot_memory_map_t *) mbi->mmap_addr;
     multiboot_memory_map_t *mend = ((void *) mems) + mbi->mmap_length;
@@ -61,22 +55,7 @@ void kmain(unsigned long magic, unsigned long addr) {
     }
 
 
-    //sti();
     release_global();
-
-
-    /*
-    kprintf("ret %li\n", raw_syscall(SYS_NR_DB_PRINT, "heyyyy"));
-
-    addr_space_t as = create_proc_addr_space();
-    use_addr_space(as);
-    volatile uint32_t a = *(uint32_t *)0xc1000000;
-    kprintf("eyyy: %lx\n", a);
-    a = *(uint32_t *)0xc1000008;
-    kprintf("eyyy: %lx\n", a);
-
-    free_proc_addr_space(as);
-    */
 
     struct inode in = {
         .ftype = FT_SPECIAL,
@@ -85,24 +64,10 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     fs_mount("/", &in, get_tarfs());
 
-    struct inode in2;
-    int ret = fs_lookup("/etc/motd", &in2);
-    if (ret < 0) {
-        kprintf("ret=%s\n", strerror(-ret));
-        panic("ret");
-    }
-
-    struct file f;
-    fs_open(&in2, &f);
-
-    char buf[500];
-    kprintf("%lu\n", f.fops->read(&f, buf, 500));
-    kprintf("\"%s\"\n", buf);
-
     init_proc();
 
 
-    sys_exec("bin/init");
+    sys_exec("/bin/init");
 
     char ch;
     while (1) {

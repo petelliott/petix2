@@ -4,7 +4,7 @@ include ../obj.mk
 ARCHSRC= $(wildcard arch/$(ARCH)/*.c) $(wildcard arch/$(ARCH)/*.s)
 ARCHOBJ= $(patsubst %.s,%.s.o, $(patsubst %.c,%.c.o,$(ARCHSRC)))
 
-OBJS= $(ARCHOBJ) main.c.o tty.c.o tar.c.o kdebug.c.o initramfs.c.o mem.c.o \
+OBJS= $(ARCHOBJ) main.c.o tty.c.o tar.c.o kdebug.c.o mem.c.o \
 	kmalloc.c.o syscall.c.o elf.c.o proc.c.o sync.c.o fs.c.o \
 	device/initrd.c.o fs/tarfs.c.o
 
