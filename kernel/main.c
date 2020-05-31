@@ -12,6 +12,8 @@
 #include <stddef.h>
 #include <string.h>
 #include "device/initrd.h"
+#include "device.h"
+#include "fs.h"
 
 
 
@@ -73,6 +75,21 @@ void kmain(unsigned long magic, unsigned long addr) {
     kprintf("eyyy: %lx\n", a);
 
     free_proc_addr_space(as);
+    */
+
+    /*
+    struct inode in = {
+        .ftype = FT_SPECIAL,
+        .dev = MKDEV(DEV_INITRD, 0),
+    };
+
+    struct file f;
+    fs_open(&in, &f);
+
+    char buf[50];
+    f.fops->read(&f, buf, 50);
+
+    kprintf("\"%s\"\n", buf);
     */
 
     init_proc();

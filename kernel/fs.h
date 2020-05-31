@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #define FILE_NAME_LEN 256
+#define PATH_MAX 4096
 
 struct inode;
 struct file;
@@ -29,7 +30,10 @@ struct file_ops {
 struct inode_ops {
     struct file_ops reg_ops;
 
-    int (*lookup) (const char *fname);
+    int (*getroot)(const struct fs_inst *, struct inode *);
+
+    int (*lookup)(struct inode *, const char *fname, struct inode *);
+
 };
 
 struct inode {
@@ -60,13 +64,15 @@ struct fs_inst {
     const struct inode_ops *iops;
 };
 
+
 int fs_mount(const char *targ, struct inode *src, const struct inode_ops *fs);
 int fs_umount(const char *targ);
 
 int fs_open(struct inode *in, struct file *f);
 
-int register_device(int major, const struct file_ops *ops);
+int fs_lookup(const char *path, struct inode *inode);
 
+int register_device(int major, const struct file_ops *ops);
 
 off_t fs_default_lseek(struct file *f, off_t off, int whence);
 
