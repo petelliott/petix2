@@ -11,8 +11,9 @@ enum errno_ns {
     EIO    = 5,
     ENXIO  = 6,
 
-    EISDIR = 21,
-    EINVAL = 22,
+    ENOTDIR = 20,
+    EISDIR  = 21,
+    EINVAL  = 22,
 };
 
 #endif

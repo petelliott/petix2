@@ -8,6 +8,7 @@ static const char * const errtab[] = {
     [EINTR]  = "Interrupted system call",
     [EIO]    = "Input/output error",
     [ENXIO]  = "No such device or address",
+    [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",
     [EINVAL] = "Invalid argument",
 };

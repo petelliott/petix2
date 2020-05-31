@@ -14,6 +14,7 @@
 #include "device/initrd.h"
 #include "device.h"
 #include "fs.h"
+#include "fs/tarfs.h"
 
 
 
@@ -77,20 +78,26 @@ void kmain(unsigned long magic, unsigned long addr) {
     free_proc_addr_space(as);
     */
 
-    /*
     struct inode in = {
         .ftype = FT_SPECIAL,
         .dev = MKDEV(DEV_INITRD, 0),
     };
 
+    fs_mount("/", &in, get_tarfs());
+
+    struct inode in2;
+    int ret = fs_lookup("/etc/motd", &in2);
+    if (ret < 0) {
+        kprintf("ret=%s\n", strerror(-ret));
+        panic("ret");
+    }
+
     struct file f;
-    fs_open(&in, &f);
+    fs_open(&in2, &f);
 
-    char buf[50];
-    f.fops->read(&f, buf, 50);
-
+    char buf[500];
+    kprintf("%lu\n", f.fops->read(&f, buf, 500));
     kprintf("\"%s\"\n", buf);
-    */
 
     init_proc();
 

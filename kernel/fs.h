@@ -30,9 +30,10 @@ struct file_ops {
 struct inode_ops {
     struct file_ops reg_ops;
 
-    int (*getroot)(const struct fs_inst *, struct inode *);
+    int (*getroot)(struct fs_inst *, struct inode *);
 
     int (*lookup)(struct inode *, const char *fname, struct inode *);
+    int (*lookup_all)(struct fs_inst *, const char *path, struct inode *);
 
 };
 
@@ -44,10 +45,11 @@ struct inode {
         FT_SPECIAL,
         FT_REGULAR,
     } ftype;
+    size_t size; // optional. for use by file systems
     size_t inode_id;
 
     dev_t dev;
-    const struct fs_inst *fs;
+    struct fs_inst *fs;
 };
 
 

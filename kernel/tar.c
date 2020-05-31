@@ -14,8 +14,8 @@ size_t tar_field(const char *f) {
 
 struct tar *tar_next(struct tar *header) {
     size_t size = tar_field(header->size);
-    size_t fblocks = (size + BLOCKSIZE - 1) / BLOCKSIZE;
-    struct tar *next = ((void *) header) + (fblocks + 1) * BLOCKSIZE;
+    size_t fblocks = (size + TAR_BLOCKSIZE - 1) / TAR_BLOCKSIZE;
+    struct tar *next = ((void *) header) + (fblocks + 1) * TAR_BLOCKSIZE;
     if (next->name[0] == 0) {
         return NULL;
     } else {
@@ -29,6 +29,13 @@ const char *tar_contents(struct tar *header) {
     if (tar_field(header->size) == 0) {
         return empty;
     } else {
-        return ((const char *) header) + BLOCKSIZE;
+        return ((const char *) header) + TAR_BLOCKSIZE;
     }
+}
+
+size_t tar_next_blk(struct tar * header, size_t fblock) {
+    size_t size = tar_field(header->size);
+    size_t nblocks = (size + TAR_BLOCKSIZE - 1) / TAR_BLOCKSIZE;
+
+    return fblock + nblocks +1;
 }

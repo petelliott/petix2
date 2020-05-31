@@ -19,11 +19,15 @@ int fs_open(struct inode *in, struct file *f) {
         f->inode = *in;
         f->offset = 0;
         f->fops = fops;
+        kassert(fops->open != NULL);
+
         return fops->open(in, f);
     } else if (in->ftype == FT_REGULAR) {
         f->inode = *in;
         f->offset = 0;
         f->fops = &(in->fs->iops->reg_ops);
+        kassert(f->fops->open != NULL);
+
         return f->fops->open(in, f);
     } else if (in->ftype == FT_DIR) {
         return -EISDIR;
@@ -74,7 +78,7 @@ static int fs_getfs(const char *p, struct fs_inst **fs, const char **relpath) {
 
     struct mount_tree *node = &mount_root;
 
-    size_t reloff;
+    ssize_t reloff = -1;
 
     if (node->mountpoint) {
         *fs = &(node->fs);
@@ -94,7 +98,7 @@ static int fs_getfs(const char *p, struct fs_inst **fs, const char **relpath) {
         }
 
         if (!found) {
-            return -ENOENT;
+            break;
         }
 
         if (node->mountpoint) {
@@ -103,6 +107,9 @@ static int fs_getfs(const char *p, struct fs_inst **fs, const char **relpath) {
         }
     }
 
+    if (reloff == -1) {
+        return -ENOENT;
+    }
     *relpath = p + reloff;
     return 0;
 }
@@ -118,23 +125,31 @@ int fs_lookup(const char *p, struct inode *inode) {
         return ret;
     }
 
-    char path[PATH_MAX];
-    strncpy(path, p2, PATH_MAX);
-
-    fs->iops->getroot(fs, inode);
-
-    char *save;
-    for (char *i = strtok_r(path, "/", &save); i != NULL;
-         i = strtok_r(NULL, "/", &save)) {
-
-        int ret = fs->iops->lookup(inode, i, inode);
+    if (fs->iops->lookup_all != NULL) {
+        for (; *p2 == '/'; ++p2) {}
+        int ret = fs->iops->lookup_all(fs, p2, inode);
         if (ret < 0) {
             release_lock(&mount_lock);
             return ret;
         }
-    }
+    } else {
 
-    *inode = in
+        char path[PATH_MAX];
+        strncpy(path, p2, PATH_MAX);
+
+        fs->iops->getroot(fs, inode);
+
+        char *save;
+        for (char *i = strtok_r(path, "/", &save); i != NULL;
+            i = strtok_r(NULL, "/", &save)) {
+
+            int ret = fs->iops->lookup(inode, i, inode);
+            if (ret < 0) {
+                release_lock(&mount_lock);
+                return ret;
+            }
+        }
+    }
 
     release_lock(&mount_lock);
     return 0;

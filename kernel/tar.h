@@ -24,7 +24,7 @@ struct tar {
                                 /* 500 */
 };
 
-#define BLOCKSIZE 512
+#define TAR_BLOCKSIZE 512
 
 #define TMAGIC   "ustar"        /* ustar and a null */
 #define TMAGLEN  6
@@ -64,5 +64,7 @@ struct tar {
 size_t tar_field(const char *f);
 struct tar *tar_next(struct tar * header);
 const char *tar_contents(struct tar * header);
+
+size_t tar_next_blk(struct tar * header, size_t fblock);
 
 #endif
