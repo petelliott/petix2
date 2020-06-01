@@ -1,4 +1,4 @@
-#include "tty.h"
+#include "device/tty.h"
 #include "multiboot.h"
 #include "tar.h"
 #include "kdebug.h"
@@ -20,7 +20,7 @@
 void kmain(unsigned long magic, unsigned long addr) {
     acquire_global();
 
-	tty_init();
+    tty_init();
     init_cpu();
     kassert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
@@ -66,15 +66,6 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     init_proc();
 
+    // here we go!
     sys_exec("/bin/init");
-
-    char ch;
-    while (1) {
-        tty_read(&ch, 1);
-        tty_write(&ch, 1);
-    }
-
-    for (;;) {
-        halt();
-    }
 }

@@ -1,5 +1,5 @@
 #include "kdebug.h"
-#include "tty.h"
+#include "device/tty.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>

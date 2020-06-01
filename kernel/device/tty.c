@@ -4,9 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include "arch/cpu.h"
-#include "kdebug.h"
-#include "sync.h"
+#include "../arch/cpu.h"
+#include "../kdebug.h"
+#include "../sync.h"
+#include "../device.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -63,6 +64,20 @@ static void term_clear(void) {
 	}
 }
 
+// device stuff
+static struct file_ops fops;
+static petix_lock_t tty_lock;
+
+
+static int dev_open(struct inode *in, struct file *file) {
+    return 0;
+}
+
+static ssize_t dev_write(struct file *f, const char *buf, size_t count) {
+    return tty_write(buf, count);
+}
+
+
 static void onkeypress(int scancode);
 
 static size_t row, col;
@@ -70,12 +85,22 @@ static enum vga_color fg;
 static enum vga_color bg;
 
 void tty_init(void) {
+    acquire_lock(&tty_lock);
     term_clear();
     row = col = 0;
     term_curto(row, col);
     fg = VGA_COLOR_LIGHT_GREY;
     bg = VGA_COLOR_BLACK;
-    register_keypress(onkeypress);
+
+    memset(&fops, 0, sizeof(fops));
+    fops = (struct file_ops) {
+        .open = dev_open,
+        .write = dev_write,
+    };
+
+    register_device(DEV_TTY, &fops);
+    //register_keypress(onkeypress);
+    release_lock(&tty_lock);
 }
 
 static void scroll_up(void) {
@@ -126,17 +151,21 @@ static void term_putchar(char c) {
 }
 
 ssize_t tty_write(const void *buf, size_t count) {
+    acquire_lock(&tty_lock);
 
     for (size_t i = 0; i < count; ++i) {
         term_putchar(((const char *)buf)[i]);
     }
     term_curto(row, col);
+    release_lock(&tty_lock);
+
     return count;
 }
 
 
 // input functions
 
+/*
 // stolen from serenityos
 static const char en_map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',
@@ -243,3 +272,4 @@ ssize_t tty_read(void *buf, size_t count) {
     }
     return c;
 }
+*/
