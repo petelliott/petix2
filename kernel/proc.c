@@ -55,8 +55,11 @@ struct pcb *alloc_proc(void) {
 
     while (ptable[pt_free].rs != RS_NOPROC) {
         pt_free = (pt_free + 1) % PTABLE_SIZE;
-        // out of pids
-        kassert(pt_free != init_off);
+
+        if (pt_free == init_off) {
+            // out of pids
+            return NULL;
+        }
     }
 
     struct pcb *pcb = &(ptable[pt_free]);

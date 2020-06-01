@@ -80,6 +80,10 @@ ssize_t sys_fork(void) {
     struct pcb *old = get_pcb(get_pid());
     struct pcb *new = alloc_proc();
 
+    if (new == NULL) {
+        return -EAGAIN;
+    }
+
     acquire_global();
     new->ppid = old->pid;
     new->rs = RS_READY;
