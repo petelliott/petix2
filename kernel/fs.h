@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "sync.h"
 
 #define FILE_NAME_LEN 256
 #define PATH_MAX 4096
@@ -63,6 +64,7 @@ struct file {
 
 struct fs_inst {
     struct file file;
+    petix_lock_t lock; //for use by the fs
     const struct inode_ops *iops;
 };
 

@@ -6,8 +6,6 @@
 #include "../kdebug.h"
 #include "../sync.h"
 
-//could be one lock per instance
-petix_lock_t tarfs_lock;
 
 static int topen(struct inode *in, struct file *f) {
     f->size = in->size;
@@ -22,10 +20,10 @@ static ssize_t tread(struct file *f, char *buf, size_t n) {
 
     off_t off = f->private_data + f->offset;
 
-    acquire_lock(&tarfs_lock);
+    acquire_lock(&(f->inode.fs->lock));
     f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
     int ret = f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, len);
-    release_lock(&tarfs_lock);
+    release_lock(&(f->inode.fs->lock));
 
     return ret;
 }
@@ -44,6 +42,8 @@ static int getroot(struct fs_inst *fs, struct inode *in) {
 static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
     char buf[TAR_BLOCKSIZE];
 
+    acquire_lock(&(fs->lock));
+
     fs->file.fops->lseek(&(fs->file), 0, SEEK_SET);
 
     struct tar *const tar = (void *) buf;
@@ -53,6 +53,7 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
         fs->file.fops->read(&(fs->file), buf, TAR_BLOCKSIZE);
 
         if (tar->name[0] == 0) {
+            release_lock(&(fs->lock));
             return -ENOENT;
         }
 
@@ -72,6 +73,8 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
             in->size = tar_field(tar->size);
             in->inode_id = blk;
             in->fs = fs;
+
+            release_lock(&(fs->lock));
             return 0;
         }
     }

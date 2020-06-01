@@ -1,7 +1,8 @@
 #ifndef SYNC_H
 #define SYNC_H
 
-#include "proc.h"
+#include <sys/types.h>
+#include <stdbool.h>
 
 void acquire_global(void);
 void release_global(void);
