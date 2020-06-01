@@ -13,6 +13,10 @@ int main() {
         raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
     }
 
+    ssize_t nr = write(fd, "aaaa", 4);
+    if (nr == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+    }
 
     pid_t ret = fork();
     if (ret == 0) {

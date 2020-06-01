@@ -39,7 +39,19 @@ ssize_t sys_read(size_t fd, char *buf, size_t count) {
 }
 
 ssize_t sys_write(size_t fd, const char *buf, size_t count) {
-    return -ENOSYS;
+    struct pcb *pcb = get_pcb(get_pid());
+
+    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+        return -EBADF;
+    }
+
+    struct file *f = &(pcb->fds[fd].file);
+
+    if (f->fops->write == NULL) {
+        return -EPERM;
+    }
+
+    return f->fops->write(f, buf, count);
 }
 
 ssize_t sys_open(const char *path, int flags, int mode) {
