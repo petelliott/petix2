@@ -4,7 +4,10 @@
 #include <errno.h>
 #include <string.h>
 #include "../kdebug.h"
+#include "../sync.h"
 
+//could be one lock per instance
+petix_lock_t tarfs_lock;
 
 static int topen(struct inode *in, struct file *f) {
     f->size = in->size;
@@ -16,8 +19,15 @@ static int topen(struct inode *in, struct file *f) {
 
 static ssize_t tread(struct file *f, char *buf, size_t n) {
     size_t len = MIN(f->size - f->offset, n);
-    return f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, len);
-    return 0;
+
+    off_t off = f->private_data + f->offset;
+
+    acquire_lock(&tarfs_lock);
+    f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
+    int ret = f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, len);
+    release_lock(&tarfs_lock);
+
+    return ret;
 }
 
 #define ID_ROOT 0

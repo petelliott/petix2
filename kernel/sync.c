@@ -72,7 +72,6 @@ void release_lock(petix_lock_t *lock) {
         lock->locked = false;
     } else {
         if (!(lock->locked && (lock->held_by == get_pid() || lock->global))) {
-            kprintf("%i, %i, %i\n", lock->locked, lock->held_by, lock->global);
             panic("attempt to release un-acquired lock");
         } else if (lock->locked) {
             lock->locked = false;

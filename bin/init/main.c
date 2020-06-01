@@ -13,22 +13,26 @@ int main() {
         raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
     }
 
-    ssize_t nr = read(fd, buff, 50);
-    if (nr == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-
-    raw_syscall(SYS_NR_DB_PRINT, buff);
-
-
 
     pid_t ret = fork();
     if (ret == 0) {
+        ssize_t nr = read(fd, buff, 50);
+        if (nr == -1) {
+            raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+        }
+
+        raw_syscall(SYS_NR_DB_PRINT, buff);
         //while (1) {
         //    raw_syscall(SYS_NR_DB_PRINT, "A");
         //}
         return raw_syscall(SYS_NR_DB_PRINT, "hello from child");
     } else {
+        ssize_t nr = read(fd, buff, 50);
+        if (nr == -1) {
+            raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+        }
+
+        raw_syscall(SYS_NR_DB_PRINT, buff);
         //while (1) {
         //    raw_syscall(SYS_NR_DB_PRINT, "B");
         //}
