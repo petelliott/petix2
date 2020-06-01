@@ -1,26 +1,28 @@
 #include <sys/syscall.h>
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/types.h>
 
 
 int main() {
     char buff[50];
-    int fd = raw_syscall(SYS_NR_OPEN, "/etc/motd");
-    if (fd < 0) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(-fd));
+    int fd = open("/etc/motd", 0);
+    if (fd == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
     }
 
-    ssize_t nr = raw_syscall(SYS_NR_READ, fd, buff, 50);
-    if (nr < 0) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(-nr));
+    ssize_t nr = read(fd, buff, 50);
+    if (nr == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
     }
 
     raw_syscall(SYS_NR_DB_PRINT, buff);
 
 
 
-    size_t ret = raw_syscall(SYS_NR_FORK);
+    pid_t ret = fork();
     if (ret == 0) {
         //while (1) {
         //    raw_syscall(SYS_NR_DB_PRINT, "A");

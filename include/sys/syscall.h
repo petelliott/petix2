@@ -2,6 +2,7 @@
 #define SYS_SYSCALL_H
 
 #include <stddef.h>
+#include <sys/types.h>
 
 #define SYSCALL_INT_NUM 0x80
 
@@ -18,6 +19,10 @@ enum syscall_nums {
 };
 
 // call with whatever args the syscall takes
-size_t raw_syscall(size_t sys_num, ...);
+ssize_t raw_syscall(size_t sys_num, ...);
+
+// sets errno and returns -1 if result is negative
+ssize_t raw_syscall_errno(size_t sys_num, ...);
+
 
 #endif

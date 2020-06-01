@@ -6,7 +6,7 @@
 #include "../kdebug.h"
 
 
-static int open(struct inode *in, struct file *f) {
+static int topen(struct inode *in, struct file *f) {
     f->size = in->size;
     f->private_data = (in->inode_id + 1)*TAR_BLOCKSIZE;
     return 0;
@@ -14,7 +14,7 @@ static int open(struct inode *in, struct file *f) {
 
 #define MIN(a, b) (((a)<(b))? (a):(b))
 
-static ssize_t read(struct file *f, char *buf, size_t n) {
+static ssize_t tread(struct file *f, char *buf, size_t n) {
     size_t len = MIN(f->size - f->offset, n);
     return f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, len);
     return 0;
@@ -73,9 +73,9 @@ const struct inode_ops *get_tarfs(void) {
     static struct inode_ops iops;
     iops = (struct inode_ops) {
         .reg_ops = {
-            .open = open,
+            .open = topen,
             .lseek = fs_default_lseek,
-            .read = read,
+            .read = tread,
         },
         .getroot = getroot,
         .lookup_all = lookup_all

@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/types.h>
 #include "fs.h"
 
-typedef size_t pid_t;
 
 enum ready_state {
     RS_CREATED,
