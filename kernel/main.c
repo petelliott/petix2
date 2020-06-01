@@ -14,6 +14,7 @@
 #include "device.h"
 #include "fs.h"
 #include "fs/tarfs.h"
+#include "fs/devfs.h"
 
 
 
@@ -63,6 +64,7 @@ void kmain(unsigned long magic, unsigned long addr) {
     };
 
     fs_mount("/", &in, get_tarfs());
+    fs_mount("/dev", &in, get_devfs());
 
     init_proc();
 

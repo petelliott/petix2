@@ -7,6 +7,17 @@
 
 
 int main() {
+
+    int ttyfd = open("/dev/tty", 0);
+    if (ttyfd == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+    }
+
+    if (write(ttyfd, "hey tty\n", 8) == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+    }
+
+
     char buff[50];
     int fd = open("/etc/motd", 0);
     if (fd == -1) {

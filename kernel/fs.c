@@ -133,6 +133,7 @@ int fs_lookup(const char *p, struct inode *inode) {
             return ret;
         }
     } else {
+        kassert(fs->iops->getroot != NULL);
 
         char path[PATH_MAX];
         strncpy(path, p2, PATH_MAX);
