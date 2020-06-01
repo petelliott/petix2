@@ -6,6 +6,10 @@
 #define SYSCALL_INT_NUM 0x80
 
 enum syscall_nums {
+    SYS_NR_READ  = 0,
+    SYS_NR_WRITE = 1,
+    SYS_NR_OPEN  = 2,
+    SYS_NR_CLOSE = 3,
     SYS_NR_SCHED_YIELD = 24,
     SYS_NR_FORK     = 57,
     SYS_NR_EXEC     = 59,

@@ -3,6 +3,7 @@
 #include "sync.h"
 #include "arch/cpu.h"
 #include "arch/switch.h"
+#include <errno.h>
 
 #define PTABLE_SIZE 1024
 
@@ -68,6 +69,19 @@ struct pcb *alloc_proc(void) {
     return pcb;
 }
 
+int alloc_fd(struct pcb *pcb) {
+    for (int i = 0; i < MAX_FDS; ++i) {
+        if (!pcb->fds[i].valid) {
+            pcb->fds[i].valid = true;
+            return i;
+        }
+    }
+    return -EMFILE;
+}
+
+void release_fd(struct pcb *pcb, int i) {
+    pcb->fds[i].valid = false;
+}
 
 void sched(void) {
     acquire_global();

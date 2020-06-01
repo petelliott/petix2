@@ -66,7 +66,6 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     init_proc();
 
-
     sys_exec("/bin/init");
 
     char ch;

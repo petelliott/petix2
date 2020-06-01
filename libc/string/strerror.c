@@ -8,9 +8,12 @@ static const char * const errtab[] = {
     [EINTR]  = "Interrupted system call",
     [EIO]    = "Input/output error",
     [ENXIO]  = "No such device or address",
+    [EBADF]  = "Bad file descriptor",
     [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",
     [EINVAL] = "Invalid argument",
+    [EMFILE] = "Too many open files",
+    [ENOSYS] = "Function not Implemented",
 };
 
 const char *strerror(int errnum) {

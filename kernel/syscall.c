@@ -1,7 +1,6 @@
 #include "syscall.h"
 #include "kdebug.h"
 #include <sys/syscall.h>
-#include "initramfs.h"
 #include "arch/paging.h"
 #include "arch/switch.h"
 #include "elf.h"
@@ -10,14 +9,62 @@
 #include "fs.h"
 #include "kmalloc.h"
 #include <errno.h>
+#include <string.h>
 
 syscall_t syscall_table[256] = {
+    [SYS_NR_READ] = sys_read,
+    [SYS_NR_WRITE] = sys_write,
+    [SYS_NR_OPEN] = sys_open,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK] = sys_fork,
     [SYS_NR_EXEC] = sys_exec,
     [SYS_NR_EXIT] = sys_exit,
     [SYS_NR_DB_PRINT] = sys_db_print
 };
+
+ssize_t sys_read(size_t fd, char *buf, size_t count) {
+    struct pcb *pcb = get_pcb(get_pid());
+
+    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+        return -EBADF;
+    }
+
+    struct file *f = &(pcb->fds[fd].file);
+
+    if (f->fops->read == NULL) {
+        return -EPERM;
+    }
+
+    return f->fops->read(f, buf, count);
+}
+
+ssize_t sys_write(size_t fd, const char *buf, size_t count) {
+    return -ENOSYS;
+}
+
+ssize_t sys_open(const char *path, int flags, int mode) {
+    ssize_t err;
+    struct pcb *pcb = get_pcb(get_pid());
+
+    struct inode in;
+    err = fs_lookup(path, &in);
+    if (err < 0) {
+        return err;
+    }
+
+    int fd = alloc_fd(pcb);
+    if (fd < 0) {
+        return fd;
+    }
+
+    err = fs_open(&in, &(pcb->fds[fd].file));
+    if (err < 0) {
+        release_fd(pcb, fd);
+        return err;
+    }
+
+    return fd;
+}
 
 ssize_t sys_db_print(const char *str) {
     kprintf("sys_db_print (pid=%li): \"%s\"\n", get_pid(), str);
@@ -36,6 +83,7 @@ ssize_t sys_fork(void) {
     acquire_global();
     new->ppid = old->pid;
     new->rs = RS_READY;
+    memcpy(new->fds, old->fds, sizeof(new->fds));
 
     fork_switchable(&(new->stack_ptr), old->addr_space, &(new->addr_space));
 

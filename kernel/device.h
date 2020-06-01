@@ -4,9 +4,9 @@
 #include "fs.h"
 
 enum device_majors {
-    DEV_INITRD,
-    DEV_TTY,
-    DEV_RANDOM,
+    DEV_INITRD = 0,
+    DEV_TTY = 1,
+    DEV_RANDOM = 2,
 };
 
 #endif
