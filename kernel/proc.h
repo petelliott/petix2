@@ -10,15 +10,17 @@
 
 
 enum ready_state {
+    RS_NOPROC = 0,
     RS_CREATED,
     RS_READY,
     RS_RUNNING,
     RS_BLOCKED,
     RS_TERMINATED,
-    RS_NOPROC = 0
 };
 
 #define MAX_FDS 16
+
+#define NOT_WAITING -2
 
 struct pcb {
     addr_space_t addr_space;
@@ -27,7 +29,7 @@ struct pcb {
     uintptr_t stack_ptr;
     enum ready_state rs;
     uint8_t return_code;
-
+    pid_t wait_pid;
     struct {
         struct file file;
         bool valid;
@@ -46,6 +48,9 @@ struct pcb *alloc_proc(void);
 
 int alloc_fd(struct pcb *pcb);
 void release_fd(struct pcb *pcb, int i);
+
+// waits for a child and sets wait_pid if -1
+int proc_get_terminated_child(struct pcb *pcb, pid_t pid);
 
 void sched(void);
 

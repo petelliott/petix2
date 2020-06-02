@@ -16,6 +16,7 @@ syscall_t syscall_table[256] = {
     [SYS_NR_WRITE] = sys_write,
     [SYS_NR_OPEN] = sys_open,
     [SYS_NR_CLOSE] = sys_close,
+    [SYS_NR_WAITPID] = sys_waitpid,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK] = sys_fork,
     [SYS_NR_EXEC] = sys_exec,
@@ -93,6 +94,39 @@ ssize_t sys_close(size_t fd) {
         return f->fops->close(f);
     } else {
         return 0;
+    }
+}
+
+
+ssize_t sys_waitpid(pid_t pid, int *wstatus, int options) {
+    struct pcb *pcb = get_pcb(get_pid());
+
+    int ret = proc_get_terminated_child(pcb, pid);
+    if (ret == 0 || ret == -1) {
+        if (ret == -1) {
+            acquire_global();
+
+            pcb->rs = RS_BLOCKED;
+            pcb->wait_pid = pid;
+
+            release_global();
+            sched();
+        }
+        //there is a currently terminated process
+        acquire_global();
+        struct pcb *cpcb = get_pcb(pcb->wait_pid);
+
+        *wstatus = cpcb->return_code;
+        // destroy proc
+        cpcb->rs = RS_NOPROC;
+        cpcb->ppid = 0;
+        pid_t pid = pcb->wait_pid;
+        pcb->wait_pid = NOT_WAITING;
+
+        release_global();
+        return pid;
+    } else {
+        return ret;
     }
 }
 
@@ -184,12 +218,27 @@ ssize_t sys_exec(const char *path) {
 }
 
 ssize_t sys_exit(size_t code) {
+    acquire_global();
+
     struct pcb *pcb = get_pcb(get_pid());
     pcb->return_code = code;
+
+    struct pcb *ppcb = get_pcb(pcb->ppid);
+
+    // wake waiting process if it exists
+    if (ppcb->rs == RS_BLOCKED && (ppcb->wait_pid == pcb->pid ||
+                                   ppcb->wait_pid == -1)) {
+
+        ppcb->wait_pid = pcb->pid;
+        ppcb->rs = RS_READY;
+    }
+
     pcb->rs = RS_TERMINATED;
     free_proc_addr_space(pcb->addr_space);
-    sched();
 
+    release_global();
+
+    sched();
     //should be unreachable
     return 4;
 }

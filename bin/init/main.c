@@ -4,9 +4,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 
 int main() {
+
+    raw_syscall(SYS_NR_SCHED_YIELD);
 
     int ttyfd = open("/dev/tty", 0);
     if (ttyfd == -1) {
@@ -28,9 +31,6 @@ int main() {
     if (ttyfd2 == ttyfd) {
         raw_syscall(SYS_NR_DB_PRINT, "close works");
     }
-
-
-
 
     char buff[50];
     int fd = open("/etc/motd", 0);
@@ -54,8 +54,25 @@ int main() {
         //while (1) {
         //    raw_syscall(SYS_NR_DB_PRINT, "A");
         //}
-        return raw_syscall(SYS_NR_DB_PRINT, "hello from child");
+        raw_syscall(SYS_NR_DB_PRINT, "hello from child");
+        return 42;
     } else {
+        int wstatus;
+        pid_t pid = wait(&wstatus);
+        if (pid != 1025 || wstatus != 42) {
+            raw_syscall(SYS_NR_DB_PRINT, "wait doesn't work");
+        } else {
+            raw_syscall(SYS_NR_DB_PRINT, "wait works");
+        }
+
+
+        pid = wait(&wstatus);
+        if (pid != -1 && errno != ECHILD) {
+            raw_syscall(SYS_NR_DB_PRINT, "wait doesn't work");
+        } else {
+            raw_syscall(SYS_NR_DB_PRINT, "wait works");
+        }
+
         ssize_t nr = read(fd, buff, 50);
         if (nr == -1) {
             raw_syscall(SYS_NR_DB_PRINT, strerror(errno));

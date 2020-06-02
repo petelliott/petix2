@@ -1,5 +1,5 @@
 CC=i686-elf-gcc
-CFLAGS=-Wall -g -I$(shell pwd)/include/ -nostdlib -O2 -ffreestanding
+CFLAGS=-Wall -g -I$(shell pwd)/include/ -nostdlib -O0 -ffreestanding
 LIBS=-lgcc
 ROOT=$(shell pwd)/buildroot
 ARCH=i686

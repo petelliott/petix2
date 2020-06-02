@@ -9,6 +9,7 @@ static const char * const errtab[] = {
     [EIO]    = "Input/output error",
     [ENXIO]  = "No such device or address",
     [EBADF]  = "Bad file descriptor",
+    [ECHILD] = "No child processes",
     [EAGAIN] = "Resource temporarily unavailable",
     [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",

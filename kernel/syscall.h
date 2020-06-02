@@ -15,6 +15,8 @@ ssize_t sys_write(size_t fd, const char *buf, size_t count);
 ssize_t sys_open(const char *path, int flags, int mode);
 ssize_t sys_close(size_t fd);
 
+ssize_t sys_waitpid(pid_t pid, int *wstatus, int options);
+
 ssize_t sys_sched_yield(void);
 ssize_t sys_fork(void);
 ssize_t sys_exec(const char *path);

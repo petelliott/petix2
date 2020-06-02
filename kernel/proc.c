@@ -24,7 +24,7 @@ static void timer_handler(void) {
 void init_proc(void) {
     struct pcb *pcb = alloc_proc();
     curpid = pcb->pid;
-    pcb->ppid = pcb->pid;
+    pcb->ppid = -8; // IDK
     pcb->addr_space = NULL;
     pcb->rs = RS_RUNNING;
 
@@ -66,6 +66,8 @@ struct pcb *alloc_proc(void) {
 
     pcb->rs = RS_CREATED;
     pcb->pid = make_pid(pid_gen(pcb->pid) + 1, pt_free);
+    pcb->ppid = -1;
+    pcb->wait_pid = NOT_WAITING;
 
     release_global();
 
@@ -84,6 +86,33 @@ int alloc_fd(struct pcb *pcb) {
 
 void release_fd(struct pcb *pcb, int i) {
     pcb->fds[i].valid = false;
+}
+
+int proc_get_terminated_child(struct pcb *pcb, pid_t pid) {
+    acquire_global();
+    bool child = false;
+    for (size_t i = 0; i < PTABLE_SIZE; ++i) {
+        struct pcb *cpcb = &(ptable[i]);
+        if (cpcb->rs == RS_NOPROC) {
+            continue;
+        }
+
+        if (cpcb->ppid == pcb->pid && (pid == -1 || pid == cpcb->pid)) {
+            if (cpcb->rs == RS_TERMINATED) {
+                pcb->wait_pid = pcb->pid;
+                release_global();
+                return 0;
+            } else {
+                child = true;
+            }
+        }
+    }
+    release_global();
+    if (child) {
+        return -1;
+    } else {
+        return -ECHILD;
+    }
 }
 
 void sched(void) {
@@ -117,11 +146,14 @@ void sched(void) {
     }
 
     struct pcb *newpcb = &(ptable[off]);
-    newpcb->rs = RS_RUNNING;
-    curpid = newpcb->pid;
+    if (newpcb != curpcb) {
+        // context switch does not work with the same process
+        newpcb->rs = RS_RUNNING;
+        curpid = newpcb->pid;
 
-    //panic("debu");
-    context_switch(newpcb->stack_ptr, &(curpcb->stack_ptr), newpcb->addr_space);
+        //panic("debu");
+        context_switch(newpcb->stack_ptr, &(curpcb->stack_ptr), newpcb->addr_space);
+    }
 
     release_global();
 }

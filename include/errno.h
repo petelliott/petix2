@@ -12,6 +12,7 @@ enum errno_ns {
     ENXIO  = 6,
 
     EBADF  = 9,
+    ECHILD = 10,
 
     EAGAIN = 11,
 
