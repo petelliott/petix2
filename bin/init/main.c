@@ -16,6 +16,20 @@ int main() {
     if (write(ttyfd, "hey tty\n", 8) == -1) {
         raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
     }
+    if (write(ttyfd, "hey tty\n", 8) == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+    }
+
+    if (close(ttyfd) == -1) {
+        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
+    }
+
+    int ttyfd2 = open("/dev/tty", 0);
+    if (ttyfd2 == ttyfd) {
+        raw_syscall(SYS_NR_DB_PRINT, "close works");
+    }
+
+
 
 
     char buff[50];

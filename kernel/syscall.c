@@ -15,6 +15,7 @@ syscall_t syscall_table[256] = {
     [SYS_NR_READ] = sys_read,
     [SYS_NR_WRITE] = sys_write,
     [SYS_NR_OPEN] = sys_open,
+    [SYS_NR_CLOSE] = sys_close,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK] = sys_fork,
     [SYS_NR_EXEC] = sys_exec,
@@ -76,6 +77,23 @@ ssize_t sys_open(const char *path, int flags, int mode) {
     }
 
     return fd;
+}
+
+ssize_t sys_close(size_t fd) {
+    struct pcb *pcb = get_pcb(get_pid());
+
+    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+        return -EBADF;
+    }
+
+    struct file *f = &(pcb->fds[fd].file);
+    release_fd(pcb, fd);
+
+    if (f->fops->close != NULL) {
+        return f->fops->close(f);
+    } else {
+        return 0;
+    }
 }
 
 ssize_t sys_db_print(const char *str) {

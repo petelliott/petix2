@@ -13,6 +13,7 @@ ssize_t sys_db_print(const char *str);
 ssize_t sys_read(size_t fd, char *buf, size_t count);
 ssize_t sys_write(size_t fd, const char *buf, size_t count);
 ssize_t sys_open(const char *path, int flags, int mode);
+ssize_t sys_close(size_t fd);
 
 ssize_t sys_sched_yield(void);
 ssize_t sys_fork(void);
