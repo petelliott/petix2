@@ -48,6 +48,7 @@ void acquire_lock(petix_lock_t *lock) {
 
             release_global();
             sched();
+            acquire_lock(lock);
             return;
         } else {
             lock->locked = true;
@@ -83,6 +84,60 @@ void release_lock(petix_lock_t *lock) {
             }
             lock->lst = NULL;
         }
+    }
+
+    release_global();
+}
+
+void sem_signal(petix_sem_t *sem, size_t n) {
+    acquire_global();
+
+    sem->count += n;
+    struct sem_proc_lst *onto = NULL;
+    for (struct sem_proc_lst *lst = sem->lst; lst != NULL;) {
+        struct sem_proc_lst *next = lst->next;
+
+        if (lst->needed <= sem->count) {
+            struct pcb *pcb = get_pcb(lst->pid);
+            kassert(pcb->rs == RS_BLOCKED);
+            pcb->rs = RS_READY;
+
+            kfree(lst);
+        } else {
+            // push back on the list
+            lst->next = onto;
+            onto = lst;
+        }
+
+        lst = next;
+    }
+    sem->lst = onto;
+
+    release_global();
+}
+
+void sem_wait(petix_sem_t *sem, size_t n) {
+    acquire_global();
+
+    struct pcb *pcb = get_pcb(get_pid());
+    while(1) {
+        kassert(pcb->rs == RS_RUNNING);
+
+        if (sem->count >= n) {
+            sem->count -= n;
+            break;
+        }
+
+        struct sem_proc_lst *nplist = kmalloc(sizeof(struct sem_proc_lst));
+        nplist->pid = get_pid();
+        nplist->needed = n;
+        nplist->next = sem->lst;
+        sem->lst = nplist;
+
+        pcb->rs = RS_BLOCKED;
+        release_global();
+        sched();
+        acquire_global();
     }
 
     release_global();
