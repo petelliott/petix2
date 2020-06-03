@@ -3,7 +3,12 @@
     .type _start, @function
 _start:
     mov %esp, %ebp
-    /* TODO: argc and argv */
+
+    lea 4(%ebp), %eax
+    push %eax
+    mov 0(%ebp), %eax
+    push %eax
+
     call main
 
     mov %eax, %ebx

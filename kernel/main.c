@@ -69,5 +69,7 @@ void kmain(unsigned long magic, unsigned long addr) {
     init_proc();
 
     // here we go!
-    sys_exec("/bin/init");
+    char *argv[] = {"a", "b", "c", "d", NULL};
+    char *envp[] = {NULL};
+    sys_exec("/bin/init", argv, envp);
 }

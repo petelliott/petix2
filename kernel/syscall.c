@@ -164,7 +164,7 @@ ssize_t sys_fork(void) {
     }
 }
 
-ssize_t sys_exec(const char *path) {
+ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     int err;
 
     struct pcb *pcb = get_pcb(get_pid());
@@ -209,10 +209,39 @@ ssize_t sys_exec(const char *path) {
 
     kfree_sync(data);
 
+
+    // push args;
+    size_t argc;
+    for (argc = 0; argv[argc] != NULL; ++argc) {}
+
+    uintptr_t sp = 0xfffffff0;
+
+    size_t argv_size = argc*sizeof(char *);
+    char **tmp_argv = kmalloc_sync(argv_size);
+
+
+    for (size_t i = 0; i < argc; ++i) {
+        size_t len = strlen(argv[i]) + 1;
+        sp -= len;
+        memcpy((void *)sp, argv[i], len);
+        tmp_argv[i] = (char *)sp;
+    }
+
+    sp -= sizeof(char *);
+    *(char **) sp = NULL;
+    sp -= argv_size;
+    memcpy((void *)sp, tmp_argv, argv_size);
+    sp -= sizeof(size_t);
+    *(size_t *) sp = argc;
+
+    kfree_sync(tmp_argv);
+
     //TODO make this more portable
-    asm volatile ("mov $0xfffffff0, %%esp\n"
+    asm volatile ("mov %1, %%esp\n"
                   "jmp *%0\n"
-                  ::"r" (entry));
+                  :
+                  :"r" (entry),
+                   "r" (sp));
     // should be unreachable
     return 4;
 }

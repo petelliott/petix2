@@ -19,7 +19,7 @@ ssize_t sys_waitpid(pid_t pid, int *wstatus, int options);
 
 ssize_t sys_sched_yield(void);
 ssize_t sys_fork(void);
-ssize_t sys_exec(const char *path);
+ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]);
 ssize_t sys_exit(size_t code);
 
 
