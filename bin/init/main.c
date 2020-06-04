@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
 
     raw_syscall(SYS_NR_SCHED_YIELD);
 
+
     int ttyfd = open("/dev/tty", 0);
     if (ttyfd == -1) {
         raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
@@ -26,6 +27,27 @@ int main(int argc, char *argv[]) {
     if (write(ttyfd, "hey tty\n", 8) == -1) {
         raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
     }
+
+    char c;
+
+    /*
+    write(ttyfd, "> ", 2);
+    while (read(ttyfd, &c, 1) != 0) {
+        write(ttyfd, &c, 1);
+        if (c == '\n') {
+            write(ttyfd, "> ", 2);
+        }
+    }
+    */
+
+    char b2[50];
+    write(ttyfd, "$ ", 2);
+    int ret2;
+    while ((ret2 = read(ttyfd, b2, 5)) > 0) {
+        write(ttyfd, b2, ret2);
+    }
+
+    write(ttyfd, "\n", 1);
 
     if (close(ttyfd) == -1) {
         raw_syscall(SYS_NR_DB_PRINT, strerror(errno));

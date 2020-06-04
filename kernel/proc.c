@@ -116,6 +116,11 @@ int proc_get_terminated_child(struct pcb *pcb, pid_t pid) {
 }
 
 void sched(void) {
+    static bool nested = false;
+    if (nested) {
+        return;
+    }
+
     acquire_global();
 
     struct pcb *curpcb = &(ptable[pid_off(curpid)]);
@@ -135,10 +140,12 @@ void sched(void) {
         if (off == ioff) {
             // out of pids, sleep until an interrupt changes that
             if (blocked_p) {
-                kprintf("no processes; halting until interrupt\n");
+                //kprintf("no processes; halting until interrupt\n");
+                nested = true;
                 release_global();
                 halt();
                 acquire_global();
+                nested = false;
             } else {
                 panic("no running procs. TODO: shutdown");
             }
@@ -153,6 +160,8 @@ void sched(void) {
 
         //panic("debu");
         context_switch(newpcb->stack_ptr, &(curpcb->stack_ptr), newpcb->addr_space);
+    } else {
+        curpcb->rs = RS_RUNNING;
     }
 
     release_global();

@@ -4,7 +4,7 @@
 #include "kdebug.h"
 #include "kmalloc.h"
 
-static size_t acq_depth = 0;
+static ssize_t acq_depth = 0;
 
 void acquire_global(void) {
     cli();
@@ -14,6 +14,7 @@ void acquire_global(void) {
 void release_global(void) {
     cli();
     acq_depth--;
+
     kassert(acq_depth >= 0);
 
     if (acq_depth == 0) {
@@ -92,7 +93,11 @@ void release_lock(petix_lock_t *lock) {
 void sem_signal(petix_sem_t *sem, size_t n) {
     acquire_global();
 
-    sem->count += n;
+    if (n == 0) {
+        sem->count = 1;
+    } else {
+        sem->count += n;
+    }
     struct sem_proc_lst *onto = NULL;
     for (struct sem_proc_lst *lst = sem->lst; lst != NULL;) {
         struct sem_proc_lst *next = lst->next;
@@ -119,6 +124,10 @@ void sem_signal(petix_sem_t *sem, size_t n) {
 void sem_wait(petix_sem_t *sem, size_t n) {
     acquire_global();
 
+    if (n == 0) {
+        n = 1;
+    }
+
     struct pcb *pcb = get_pcb(get_pid());
     while(1) {
         kassert(pcb->rs == RS_RUNNING);
@@ -141,4 +150,12 @@ void sem_wait(petix_sem_t *sem, size_t n) {
     }
 
     release_global();
+}
+
+void cond_wake(petix_sem_t *sem) {
+    sem_signal(sem, 0);
+}
+
+void cond_wait(petix_sem_t *sem) {
+    sem_wait(sem, 0);
 }

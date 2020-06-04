@@ -37,7 +37,13 @@ typedef struct {
     struct sem_proc_lst *lst;
 } petix_sem_t;
 
+// n=0 => binary semaphore
 void sem_signal(petix_sem_t *sem, size_t n);
 void sem_wait(petix_sem_t *sem, size_t n);
+
+// condition variables are binary semaphores
+void cond_wake(petix_sem_t *sem);
+void cond_wait(petix_sem_t *sem);
+
 
 #endif

@@ -70,6 +70,7 @@ static petix_lock_t tty_lock;
 
 
 static int dev_open(struct inode *in, struct file *file) {
+    file->private_data = false;
     return 0;
 }
 
@@ -77,6 +78,7 @@ static ssize_t dev_write(struct file *f, const char *buf, size_t count) {
     return tty_write(buf, count);
 }
 
+static ssize_t dev_read(struct file *f, char *buf, size_t count);
 
 static void onkeypress(int scancode);
 
@@ -94,12 +96,13 @@ void tty_init(void) {
 
     memset(&fops, 0, sizeof(fops));
     fops = (struct file_ops) {
-        .open = dev_open,
+        .open  = dev_open,
         .write = dev_write,
+        .read  = dev_read,
     };
 
     register_device(DEV_TTY, &fops);
-    //register_keypress(onkeypress);
+    register_keypress(onkeypress);
     release_lock(&tty_lock);
 }
 
@@ -165,7 +168,6 @@ ssize_t tty_write(const void *buf, size_t count) {
 
 // input functions
 
-/*
 // stolen from serenityos
 static const char en_map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',
@@ -193,8 +195,16 @@ static size_t lbase  = 0;
 static size_t loff   = 0;
 
 static bool shifted = false;
+static bool ctrld   = false;
 
 static char sc_to_ascii(int scancode) {
+    if (ctrld) {
+        char ch = en_map[scancode];
+        if (ch >= 'a' && ch <= 'z') {
+            return ch - 0x60;
+        }
+    }
+
     if (shifted) {
         return en_shift_map[scancode];
     } else {
@@ -202,13 +212,20 @@ static char sc_to_ascii(int scancode) {
     }
 }
 
+petix_lock_t read_lock;
+petix_sem_t  read_sem;
 
 // interrupt handler
 static void onkeypress(int scancode) {
+    acquire_global();
     if (scancode == 0x36) {
         shifted = true;
     } else if (scancode == 0xb6) {
         shifted = false;
+    } else if (scancode == 0x1d) {
+        ctrld = true;
+    } else if (scancode == 0x9d) {
+        ctrld = false;
     } else if (scancode < 0x80) {
         char ch = sc_to_ascii(scancode);
         if (ch != 0) {
@@ -221,19 +238,30 @@ static void onkeypress(int scancode) {
 
                 filebuff[loff] = ch;
                 loff = (loff+1) % BUFF_LEN;
-                tty_write(&ch, 1);
 
-                if (ch == '\n') {
+                if (ch > 0x06) {
+                    tty_write(&ch, 1);
+                }
+
+                if (ch == '\n' || ch == 0x04) {
                     lbase = loff;
+                    cond_wake(&read_sem);
                 }
             }
         }
     }
+    release_global();
 }
 
 #define MIN(a, b) ((a < b)? a:b)
 
-ssize_t tty_read(void *buf, size_t count) {
+static ssize_t dev_read(struct file *f, char *buf, size_t count) {
+    if (f->private_data == true) {
+        return 0;
+    }
+
+    acquire_lock(&read_lock);
+
     ssize_t c = count;
     while (count > 0) {
         acquire_global();
@@ -252,6 +280,7 @@ ssize_t tty_read(void *buf, size_t count) {
             fbase += len1;
             fbase %= BUFF_LEN;
             count -= len1;
+
             size_t start2 = fbase;
             size_t len2 = MIN(lbase - 0, count);
             fbase += len1;
@@ -265,11 +294,18 @@ ssize_t tty_read(void *buf, size_t count) {
         } else {
             release_global();
         }
-        //TODO replace with a scheduled lock
+
+        //eot
+        if (*(buf-1) == 0x04) {
+            f->private_data = true;
+            release_lock(&read_lock);
+            return (c-count) - 1;
+        }
+
         if (count > 0) {
-            halt();
+            cond_wait(&read_sem);
         }
     }
+    release_lock(&read_lock);
     return c;
 }
-*/
