@@ -187,6 +187,11 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     if (err < 0) {
         return err;
     }
+
+    if (!in.exec) {
+        return -EACCES;
+    }
+
     err = fs_open(&in, &f);
     if (err < 0) {
         return err;

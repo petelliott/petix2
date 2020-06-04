@@ -11,6 +11,7 @@ static const char * const errtab[] = {
     [EBADF]  = "Bad file descriptor",
     [ECHILD] = "No child processes",
     [EAGAIN] = "Resource temporarily unavailable",
+    [EACCES] = "Permission denied",
     [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",
     [EINVAL] = "Invalid argument",

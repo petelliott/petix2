@@ -58,7 +58,7 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
         }
 
         if (strncmp(tar->name, path, 100) == 0) {
-            in->exec = 0; //TODO
+            in->exec = (tar_field(tar->mode) & 0111) != 0;
             if (tar->typeflag == REGTYPE) {
                 in->ftype = FT_REGULAR;
             } else if (tar->typeflag == DIRTYPE) {

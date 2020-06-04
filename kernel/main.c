@@ -71,5 +71,9 @@ void kmain(unsigned long magic, unsigned long addr) {
     // here we go!
     char *argv[] = {"a", "b", "c", "d", NULL};
     char *envp[] = {NULL};
-    sys_exec("/bin/init", argv, envp);
+
+    int ret = sys_exec("/bin/init", argv, envp);
+    if (ret < 0) {
+        kprintf("execve(\"/bin/init\"): %s\n", strerror(-ret));
+    }
 }
