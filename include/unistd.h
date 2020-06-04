@@ -20,5 +20,7 @@ int close(int fd);
 
 pid_t fork(void);
 
+int execve(const char *path, char *const argv[], char *const envp[]);
+
 
 #endif
