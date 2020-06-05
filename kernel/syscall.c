@@ -17,6 +17,7 @@ syscall_t syscall_table[256] = {
     [SYS_NR_OPEN] = sys_open,
     [SYS_NR_CLOSE] = sys_close,
     [SYS_NR_WAITPID] = sys_waitpid,
+    [SYS_NR_DUP2] = sys_dup2,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK] = sys_fork,
     [SYS_NR_EXEC] = sys_exec,
@@ -24,7 +25,7 @@ syscall_t syscall_table[256] = {
     [SYS_NR_DB_PRINT] = sys_db_print
 };
 
-ssize_t sys_read(size_t fd, char *buf, size_t count) {
+ssize_t sys_read(ssize_t fd, char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
 
     if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
@@ -40,7 +41,7 @@ ssize_t sys_read(size_t fd, char *buf, size_t count) {
     return f->fops->read(f, buf, count);
 }
 
-ssize_t sys_write(size_t fd, const char *buf, size_t count) {
+ssize_t sys_write(ssize_t fd, const char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
 
     if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
@@ -80,7 +81,7 @@ ssize_t sys_open(const char *path, int flags, int mode) {
     return fd;
 }
 
-ssize_t sys_close(size_t fd) {
+ssize_t sys_close(ssize_t fd) {
     struct pcb *pcb = get_pcb(get_pid());
 
     if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
@@ -97,6 +98,28 @@ ssize_t sys_close(size_t fd) {
     }
 }
 
+ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
+    struct pcb *pcb = get_pcb(get_pid());
+    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+        return -EBADF;
+    }
+
+    if (fd2 >= MAX_FDS || fd2 < 0) {
+        return -EBADF;
+    }
+
+    if (fd == fd2) {
+        return fd;
+    }
+
+    if (pcb->fds[fd2].valid) {
+        sys_close(fd2);
+    }
+
+
+    pcb->fds[fd2] = pcb->fds[fd];
+    return fd2;
+}
 
 ssize_t sys_waitpid(pid_t pid, int *wstatus, int options) {
     struct pcb *pcb = get_pcb(get_pid());

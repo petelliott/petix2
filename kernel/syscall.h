@@ -10,10 +10,12 @@ extern syscall_t syscall_table[256];
 
 ssize_t sys_db_print(const char *str);
 
-ssize_t sys_read(size_t fd, char *buf, size_t count);
-ssize_t sys_write(size_t fd, const char *buf, size_t count);
+ssize_t sys_read(ssize_t fd, char *buf, size_t count);
+ssize_t sys_write(ssize_t fd, const char *buf, size_t count);
 ssize_t sys_open(const char *path, int flags, int mode);
-ssize_t sys_close(size_t fd);
+ssize_t sys_close(ssize_t fd);
+
+ssize_t sys_dup2(ssize_t fd, ssize_t fd2);
 
 ssize_t sys_waitpid(pid_t pid, int *wstatus, int options);
 
