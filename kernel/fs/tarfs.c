@@ -23,6 +23,9 @@ static ssize_t tread(struct file *f, char *buf, size_t n) {
     acquire_lock(&(f->inode.fs->lock));
     f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
     int ret = f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, len);
+    if (ret > 0) {
+        f->offset += ret;
+    }
     release_lock(&(f->inode.fs->lock));
 
     return ret;

@@ -9,106 +9,16 @@
 
 int main(int argc, char *argv[]) {
 
-    for (int i = 0; i < argc; ++i) {
-        raw_syscall(SYS_NR_DB_PRINT, argv[i]);
-    }
-
-    raw_syscall(SYS_NR_SCHED_YIELD);
-
-
-    int ttyfd = open("/dev/tty", 0);
-    if (ttyfd == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-
-    if (write(ttyfd, "hey tty\n", 8) == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-    if (write(ttyfd, "hey tty\n", 8) == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-
-    char c;
-
-    /*
-    write(ttyfd, "> ", 2);
-    while (read(ttyfd, &c, 1) != 0) {
-        write(ttyfd, &c, 1);
-        if (c == '\n') {
-            write(ttyfd, "> ", 2);
-        }
-    }
-    */
-
-    char b2[50];
-    write(ttyfd, "$ ", 2);
-    int ret2;
-    while ((ret2 = read(ttyfd, b2, 5)) > 0) {
-        write(ttyfd, b2, ret2);
-    }
-
-    write(ttyfd, "\n", 1);
-
-    if (close(ttyfd) == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-
-    int ttyfd2 = open("/dev/tty", 0);
-    if (ttyfd2 == ttyfd) {
-        raw_syscall(SYS_NR_DB_PRINT, "close works");
-    }
-
-    char buff[50];
-    int fd = open("/etc/motd", 0);
-    if (fd == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-
-    ssize_t nr = write(fd, "aaaa", 4);
-    if (nr == -1) {
-        raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-    }
-
-    pid_t ret = fork();
-    if (ret == 0) {
-        ssize_t nr = read(fd, buff, 50);
-        if (nr == -1) {
-            raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-        }
-
-        raw_syscall(SYS_NR_DB_PRINT, buff);
-        //while (1) {
-        //    raw_syscall(SYS_NR_DB_PRINT, "A");
-        //}
-        raw_syscall(SYS_NR_DB_PRINT, "hello from child");
-        return 42;
+    //TODO: read /etc/ttys
+    pid_t getty_pid = fork();
+    if (getty_pid == 0) {
+        char *const gettyargv[] = {"/bin/getty", "/dev/tty", NULL};
+        execve("/bin/getty", gettyargv, NULL);
     } else {
         int wstatus;
-        pid_t pid = wait(&wstatus);
-        if (pid != 1025 || wstatus != 42) {
-            raw_syscall(SYS_NR_DB_PRINT, "wait doesn't work");
-        } else {
-            raw_syscall(SYS_NR_DB_PRINT, "wait works");
-        }
-
-
-        pid = wait(&wstatus);
-        if (pid != -1 && errno != ECHILD) {
-            raw_syscall(SYS_NR_DB_PRINT, "wait doesn't work");
-        } else {
-            raw_syscall(SYS_NR_DB_PRINT, "wait works");
-        }
-
-        ssize_t nr = read(fd, buff, 50);
-        if (nr == -1) {
-            raw_syscall(SYS_NR_DB_PRINT, strerror(errno));
-        }
-
-        raw_syscall(SYS_NR_DB_PRINT, buff);
-        //while (1) {
-        //    raw_syscall(SYS_NR_DB_PRINT, "B");
-        //}
-        raw_syscall(SYS_NR_SCHED_YIELD);
-        return raw_syscall(SYS_NR_DB_PRINT, "hello from parent");
+        waitpid(getty_pid, &wstatus, 0);
     }
+
+    // we probably wont return
+    return 0;
 }

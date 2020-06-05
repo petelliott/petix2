@@ -8,6 +8,6 @@ dir:
 
 clean: subdir_clean
 
-DIRS=init
+DIRS=init getty sh
 
 include ../subdirs.mk
