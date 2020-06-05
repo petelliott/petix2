@@ -198,8 +198,10 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     b = *(char *) 0xffffc000;
 
     // push args;
-    size_t argc;
-    for (argc = 0; argv[argc] != NULL; ++argc) {}
+    size_t argc = 0;
+    if (argv != NULL) {
+        for (argc = 0; argv[argc] != NULL; ++argc) {}
+    }
 
     uintptr_t sp = 0xfffffff0;
 
