@@ -167,11 +167,6 @@ ssize_t sys_fork(void) {
 ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     int err;
 
-    struct pcb *pcb = get_pcb(get_pid());
-    free_proc_addr_space(pcb->addr_space);
-    pcb->addr_space = create_proc_addr_space();
-    use_addr_space(pcb->addr_space);
-
     //TODO: this is the worst way to set up a stack
     volatile char b;
     b = *(char *) 0xfffff000;

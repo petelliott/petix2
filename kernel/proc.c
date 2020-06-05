@@ -27,11 +27,15 @@ void init_proc(void) {
     pcb->ppid = -8; // IDK
     pcb->addr_space = NULL;
     pcb->rs = RS_RUNNING;
+    pcb->addr_space = create_proc_addr_space();
+    use_addr_space(pcb->addr_space);
 
+    acquire_global();
     register_timer(timer_handler);
     set_cpu_interval(100000);
 
     enable_sched_locks();
+    release_global();
 }
 
 pid_t get_pid(void) {
