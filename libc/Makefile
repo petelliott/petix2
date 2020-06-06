@@ -6,11 +6,12 @@ OBJS = string/strcmp.c.o string/strlen.c.o string/memset.c.o \
        string/strchr.c.o string/strncpy.c.o sys/syscall.c.o \
        errno/errno.c.o fcntl/open.c.o unistd/read.c.o unistd/fork.c.o \
        unistd/write.c.o unistd/close.c.o sys/wait.c.o unistd/exec.c.o \
-       unistd/dup2.c.o
+       unistd/dup2.c.o bits/baseprintf.c.o
 
 KOBJS = string/strcmp.c.o string/strlen.c.o string/memset.c.o \
         string/memcpy.c.o string/memcmp.c.o string/strerror.c.o \
-        string/strtok.c.o string/strchr.c.o string/strncpy.c.o
+        string/strtok.c.o string/strchr.c.o string/strncpy.c.o \
+        bits/baseprintf.c.o
 
 all: libc.a libk.a
 .PHONY: all clean
