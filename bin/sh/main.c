@@ -3,14 +3,12 @@
 
 int main(int argc, char *argv[]) {
     // fake shell
-    printf("$ ");
 
-    char c;
-    while (read(STDIN_FILENO, &c, 1) > 0) {
-        write(STDOUT_FILENO, &c, 1);
-        if (c == '\n') {
-            printf("$ ");
-        }
+    char buff[1024];
+    while (!feof(stdin)) {
+        printf("$ ");
+        fgets(buff, sizeof(buff), stdin);
+        printf(buff);
     }
 
     return 0;

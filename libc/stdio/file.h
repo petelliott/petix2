@@ -10,6 +10,7 @@ struct _stdio_file {
     int fd;
     int err;
     bool valid;
+    bool eof;
 };
 
 #define MAX_FILES 16
