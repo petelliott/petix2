@@ -291,6 +291,9 @@ ssize_t sys_exit(size_t code) {
     pcb->rs = RS_TERMINATED;
     free_proc_addr_space(pcb->addr_space);
 
+    pcb->addr_space = NULL;
+    memset(pcb->fds, 0, sizeof(pcb->fds));
+
     release_global();
 
     sched();

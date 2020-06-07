@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdbool.h>
+#include "kdebug.h"
 
 static uintptr_t mem_base;
 static uintptr_t breakptr;
@@ -63,6 +64,7 @@ page_t alloc_page(void) {
     if (free_stack_top > 0) {
         page_t frame = free_stack[--free_stack_top];
         set_bit(frames, frame - mem_base/PAGE_SIZE, 1);
+        kassert(frame != 0);
         return frame;
     }
 
@@ -71,12 +73,21 @@ page_t alloc_page(void) {
             size_t off = i*sizeof(size_t)*CHAR_BIT;
             size_t bit = __builtin_ctzl(~frames[i]);
             set_bit(frames, off + bit, true);
-            return off + bit + mem_base/PAGE_SIZE;
+            page_t frame = off + bit + mem_base/PAGE_SIZE;
+            kassert(frame != 0);
+            return frame;
         }
     }
+
+    panic("out of pages");
 }
 
 void free_page(page_t page) {
+    if (page == 0) {
+        // equivalent to free(NULL);
+        return;
+    }
+
     if (free_stack_top < FREE_STACK_SIZE) {
         free_stack[free_stack_top++] = page;
     }
