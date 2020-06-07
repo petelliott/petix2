@@ -31,9 +31,9 @@ int main(int argc, char *argv[]) {
         if (pid == -1) {
             perror("fork(2)");
         } else if (pid == 0) {
-            execve(args[0], args, NULL);
+            execvp(args[0], args);
             // if we are here, there must be an error
-            perror("execve(2)");
+            perror("execvp(2)");
 
             return 1;
         } else {
