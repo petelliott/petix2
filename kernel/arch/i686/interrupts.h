@@ -18,6 +18,7 @@ struct pushed_regs {
     uint32_t ecx;
     uint32_t eax;
     uint32_t error_code; // undefined value if there is no error code.
+    uint32_t eip;
 } __attribute__((packed));
 
 typedef void(*interrupt_handler_t)(struct pushed_regs *regs);

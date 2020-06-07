@@ -20,7 +20,7 @@ gdb:
 	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \
 	                 -kernel $(ROOT)/boot/kernel \
 	                 -S -s &
-	sleep .3
+	sleep .4
 	gdb -x .gdbinit
 
 clean: subdir_clean

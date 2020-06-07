@@ -109,6 +109,11 @@ static struct block *get_free_block(size_t size) {
 static void block_merge_next(struct block *mblock) {
     // accounting for padding between end of one block and the start of another
     mblock->len = (uintptr_t)mblock->next - (uintptr_t)mblock + mblock->next->len;
+
+    if (mblock->next == base) {
+        base = mblock;
+    }
+
     mblock->next = mblock->next->next;
     if (mblock->next != NULL) {
         mblock->next->prev = mblock;
@@ -182,6 +187,7 @@ void kfree(void *ptr) {
     // check that ptr came from malloc()
     if (is_mem_block(mblock)) {
         mblock->used = 0;
+
 
         if (mblock->next != NULL && !mblock->next->used) {
             block_merge_next(mblock);

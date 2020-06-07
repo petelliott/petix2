@@ -68,6 +68,8 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     init_proc();
 
+    //volatile char b = *(char *) NULL;
+
     // here we go!
     char *argv[] = {NULL};
     char *envp[] = {NULL};

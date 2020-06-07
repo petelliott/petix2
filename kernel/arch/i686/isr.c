@@ -5,6 +5,7 @@
     asm(                                          \
     ".globl isr_" #vecn "\n"                      \
     "isr_" #vecn ":\n"                            \
+    str                                           \
     "    pushal\n"                                \
     "    pushl $" #irq "\n"                       \
     "    pushl $" #excep "\n"                     \
@@ -13,12 +14,14 @@
     "    call general_interrupt_handler\n"        \
     "    add $0xc, %esp\n"                        \
     "    popal\n"                                 \
-    str                                           \
+    "    add $4, %esp\n"                          \
     "    iret\n");
 
-#define make_isr(vecn, excep, irq) make_isr_base(vecn, excep, irq, "")
+#define make_isr(vecn, excep, irq) \
+    make_isr_base(vecn, excep, irq, "    push $-1\n")
+
 #define make_isr_popec(vecn, excep, irq) \
-    make_isr_base(vecn, excep, irq, "    add $4, %esp\n")
+    make_isr_base(vecn, excep, irq, "")
 
 #define get_isr(vecn) (uintptr_t) isr_##vecn
 

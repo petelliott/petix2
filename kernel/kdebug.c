@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <bits/baseprintf.h>
+#include "arch/cpu.h"
 
 static int kputc(int ch, void *spec) {
     char c = ch;
@@ -17,14 +18,6 @@ void kprintf(const char *fmt, ...) {
 	va_start(ap, fmt);
     base_vprintf(kputc, NULL, fmt, ap);
     va_end(ap);
-}
-
-// TODO: portability
-static void halt() {
-    asm("cli");
-    while (1) {
-        asm("hlt");
-    }
 }
 
 void kassert_internal(int tst, int line, const char *file, const char *tststr) {

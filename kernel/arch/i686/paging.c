@@ -39,6 +39,10 @@ void init_paging(void) {
         }
     }
 
+    //unmap the zeropage
+    struct page_tab_ent *pte = (void *)(kpagedir.ents[0].page_table << PAGE_SHIFT);
+    pte[0].present = 0;
+
     register_interrupt_handler(14, page_fault_handler);
 
     load_page_dir(kpagedir.ents);
@@ -68,8 +72,8 @@ static void page_fault_handler(struct pushed_regs *regs) {
     split_addr(linaddr, dir_idx, tab_idx, offset);
 
     if (!pd[dir_idx].present && !pd[dir_idx].petix_alloc) {
-        kprintf("this should be a segfault. pfla=%lx, ec=%lx\n",
-                linaddr, regs->error_code);
+        kprintf("this should be a segfault. pfla=%lx, ec=%lx, %%eip=%lx\n",
+                linaddr, regs->error_code, regs->eip);
         panic("unrecoverable page fault");
     }
 
@@ -92,8 +96,8 @@ static void page_fault_handler(struct pushed_regs *regs) {
     struct page_tab_ent *tab = (void *) (pd[dir_idx].page_table << 12);
 
     if (!tab[tab_idx].present && !tab[tab_idx].petix_alloc) {
-        kprintf("this should be a segfault. pfla=%lx, ec=%lx\n",
-                linaddr, regs->error_code);
+        kprintf("this should be a segfault. pfla=%lx, ec=%lx, %%eip=%lx\n",
+                linaddr, regs->error_code, regs->eip);
         panic("unrecoverable page fault");
     }
 
