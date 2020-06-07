@@ -6,6 +6,7 @@ int fclose(FILE *stream) {
         return -1;
     }
     int ret = close(stream->fd);
+    stream->valid = 0;
     if (ret == -1) {
         stream->err = errno;
     }

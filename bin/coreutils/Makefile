@@ -1,6 +1,8 @@
 include ../../obj.mk
 
-PROGS= $(ROOT)/bin/echo
+OBJS = echo cat
+
+PROGS = $(patsubst %, $(ROOT)/bin/%, $(OBJS))
 
 all: $(PROGS)
 

@@ -12,6 +12,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     } else if (ret == -1) {
         stream->eof = true;
         stream->err = errno;
+        return 0;
     }
     return ret;
 }
