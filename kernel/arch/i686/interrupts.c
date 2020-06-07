@@ -10,7 +10,9 @@
 #define PIC1_DATA	(PIC1+1)
 #define PIC2_COMMAND	PIC2
 #define PIC2_DATA	(PIC2+1)
+
 #define PIC_EOI		0x20		/* End-of-interrupt command code */
+#define PIC_READ_ISR 0x0b
 
 void send_eoi(int irq) {
     if(irq >= 8) {
@@ -18,6 +20,12 @@ void send_eoi(int irq) {
     }
 
 	outb(PIC1_COMMAND,PIC_EOI);
+}
+
+static uint16_t pic_read_isr(void) {
+    outb(PIC1_COMMAND, PIC_READ_ISR);
+    outb(PIC2_COMMAND, PIC_READ_ISR);
+    return (inb(PIC2_COMMAND) << 8) | inb(PIC1_COMMAND);
 }
 
 static interrupt_handler_t handlers[256];
@@ -34,6 +42,14 @@ void register_interrupt_handler(int vecn, interrupt_handler_t handler) {
 
 
 void general_interrupt_handler(struct pushed_regs regs) {
+    if (regs.irq != -1 && !(pic_read_isr() & (1 << regs.irq))) {
+        // spurious irq
+        if(regs.irq >= 8) {
+            outb(PIC1_COMMAND,PIC_EOI);
+        }
+        return;
+    }
+
     if (handlers[regs.vecn] != NULL) {
         handlers[regs.vecn](&regs);
     } else if (regs.irq != -1) {
