@@ -197,6 +197,10 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     b = *(char *) 0xffffd000;
     b = *(char *) 0xffffc000;
 
+    if (path == NULL) {
+        return -EINVAL;
+    }
+
     // using the internal file api, because we don't want to waste an
     // fd
     struct inode in;
@@ -283,14 +287,17 @@ ssize_t sys_exit(size_t code) {
     struct pcb *pcb = get_pcb(get_pid());
     pcb->return_code = code;
 
-    struct pcb *ppcb = get_pcb(pcb->ppid);
+    // init does not have a parent
+    if (pcb->ppid > 0) {
+        struct pcb *ppcb = get_pcb(pcb->ppid);
 
-    // wake waiting process if it exists
-    if (ppcb->rs == RS_BLOCKED && (ppcb->wait_pid == pcb->pid ||
-                                   ppcb->wait_pid == -1)) {
+        // wake waiting process if it exists
+        if (ppcb->rs == RS_BLOCKED && (ppcb->wait_pid == pcb->pid ||
+                                       ppcb->wait_pid == -1)) {
 
-        ppcb->wait_pid = pcb->pid;
-        ppcb->rs = RS_READY;
+            ppcb->wait_pid = pcb->pid;
+            ppcb->rs = RS_READY;
+        }
     }
 
     pcb->rs = RS_TERMINATED;

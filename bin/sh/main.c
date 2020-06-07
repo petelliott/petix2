@@ -11,6 +11,11 @@ int main(int argc, char *argv[]) {
     while (!feof(stdin)) {
         printf("$ ");
         fgets(buff, sizeof(buff), stdin);
+
+        if (feof(stdin)) {
+            break;
+        }
+
         char *save;
 
         size_t i = 0;
@@ -42,6 +47,7 @@ int main(int argc, char *argv[]) {
         }
         */
     }
+    fputs("\ngoodbye.\n", stdout);
 
     return 0;
 }
