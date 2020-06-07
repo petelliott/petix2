@@ -197,34 +197,6 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     b = *(char *) 0xffffd000;
     b = *(char *) 0xffffc000;
 
-    // push args;
-    size_t argc = 0;
-    if (argv != NULL) {
-        for (argc = 0; argv[argc] != NULL; ++argc) {}
-    }
-
-    uintptr_t sp = 0xfffffff0;
-
-    size_t argv_size = argc*sizeof(char *);
-    char **tmp_argv = kmalloc_sync(argv_size);
-
-
-    for (size_t i = 0; i < argc; ++i) {
-        size_t len = strlen(argv[i]) + 1;
-        sp -= len;
-        memcpy((void *)sp, argv[i], len);
-        tmp_argv[i] = (char *)sp;
-    }
-
-    sp -= sizeof(char *);
-    *(char **) sp = NULL;
-    sp -= argv_size;
-    memcpy((void *)sp, tmp_argv, argv_size);
-    sp -= sizeof(size_t);
-    *(size_t *) sp = argc;
-
-    kfree_sync(tmp_argv);
-
     // using the internal file api, because we don't want to waste an
     // fd
     struct inode in;
@@ -256,6 +228,39 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         f.fops->close(&f);
     }
 
+
+    // push args;
+    size_t argc = 0;
+    if (argv != NULL) {
+        for (argc = 0; argv[argc] != NULL; ++argc) {}
+    }
+
+    uintptr_t sp = 0xfffffff0;
+
+    size_t argv_size = argc*sizeof(char *);
+    char **tmp_argv = kmalloc_sync(argv_size);
+
+
+    for (size_t i = 0; i < argc; ++i) {
+        size_t len = strlen(argv[i]) + 1;
+        sp -= len;
+        memcpy((void *)sp, argv[i], len);
+        tmp_argv[i] = (char *)sp;
+    }
+
+    sp -= sizeof(char *);
+    *(char **) sp = NULL;
+    sp -= argv_size;
+    memcpy((void *)sp, tmp_argv, argv_size);
+    sp -= sizeof(size_t);
+    *(size_t *) sp = argc;
+
+    kfree_sync(tmp_argv);
+
+
+    // actually copy over data after loading the arguments, or the
+    // processes address space will be damaged, and we will get
+    // incorrect arguments
     uintptr_t entry = load_elf_file(data);
 
     kfree_sync(data);
