@@ -63,6 +63,7 @@ static void set_bit(size_t *array, size_t i, bool val) {
 page_t alloc_page(void) {
     if (free_stack_top > 0) {
         page_t frame = free_stack[--free_stack_top];
+        kassert(!get_bit(frames, frame - mem_base/PAGE_SIZE));
         set_bit(frames, frame - mem_base/PAGE_SIZE, 1);
         kassert(frame != 0);
         return frame;
@@ -87,6 +88,9 @@ void free_page(page_t page) {
         // equivalent to free(NULL);
         return;
     }
+
+    // double free
+    kassert(get_bit(frames, page - mem_base/PAGE_SIZE));
 
     if (free_stack_top < FREE_STACK_SIZE) {
         free_stack[free_stack_top++] = page;

@@ -134,7 +134,7 @@ void free_proc_addr_space(addr_space_t as) {
         if (as[i].present && as[i].petix_alloc) {
             struct page_tab_ent *pte = (void *) (as[i].page_table << PAGE_SHIFT);
             for (size_t j = 0; j < PTAB_SIZE; ++j) {
-                free_page_sync(pte[i].addr);
+                free_page_sync(pte[j].addr);
             }
 
             free_page_sync(as[i].page_table);
