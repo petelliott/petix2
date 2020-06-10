@@ -117,7 +117,7 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
 
         size_t pathlen = strnlen(path, 100);
         if (strncmp(tar->name, path, 100) == 0 ||
-            (strncmp(tar->name, path, pathlen)
+            (strncmp(tar->name, path, pathlen) == 0
              && tar->name[pathlen] == '/'
              && tar->name[pathlen+1] == '\0')) {
 

@@ -23,8 +23,13 @@ char *strtok_r(char * restrict str,
     char * ret = str;
 
     for (; *str != 0 && strchr(delim, *str) == NULL; ++str) {}
-    *str = '\0';
-    *save = str+1;
+
+    if (*str == 0) {
+        *save = str;
+    } else {
+        *str = '\0';
+        *save = str+1;
+    }
 
     return ret;
 }

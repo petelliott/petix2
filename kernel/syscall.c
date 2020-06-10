@@ -131,6 +131,10 @@ ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
 
     struct file *f = &(pcb->fds[fd].file);
 
+    if (f->inode.ftype != FT_DIR) {
+        return -ENOTDIR;
+    }
+
     if (f->fops->getdent == NULL) {
         return -EPERM;
     }
