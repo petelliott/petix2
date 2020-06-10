@@ -142,7 +142,12 @@ int fs_lookup(const char *p, struct inode *inode) {
 
     if (fs->iops->lookup_all != NULL) {
         for (; *p2 == '/'; ++p2) {}
-        int ret = fs->iops->lookup_all(fs, p2, inode);
+        int ret;
+        if (strcmp(p2, "") == 0) {
+            ret = fs->iops->getroot(fs, inode);
+        } else {
+            ret = fs->iops->lookup_all(fs, p2, inode);
+        }
         if (ret < 0) {
             release_lock(&mount_lock);
             return ret;

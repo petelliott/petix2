@@ -6,10 +6,15 @@
 #include "../kdebug.h"
 #include "../sync.h"
 
+#define ID_ROOT 0xffffffff
 
 static int topen(struct inode *in, struct file *f, int flags) {
     f->size = in->size;
-    f->private_data = (in->inode_id + 1)*TAR_BLOCKSIZE;
+    if (in->inode_id == ID_ROOT) {
+        f->private_data = 0;
+    } else {
+        f->private_data = (in->inode_id + 1)*TAR_BLOCKSIZE;
+    }
     return 0;
 }
 
@@ -39,10 +44,14 @@ int getdent(struct file *f, struct petix_dirent *d) {
     acquire_lock(&(f->inode.fs->lock));
 
     char name[100];
-    off_t off = f->private_data - TAR_BLOCKSIZE;
+    if (f->inode.inode_id == ID_ROOT) {
+        name[0] = 0;
+    } else {
+        off_t off = f->private_data - TAR_BLOCKSIZE;
 
-    f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
-    f->inode.fs->file.fops->read(&(f->inode.fs->file), name, sizeof(name));
+        f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
+        f->inode.fs->file.fops->read(&(f->inode.fs->file), name, sizeof(name));
+    }
 
     char buf[TAR_BLOCKSIZE];
 
@@ -58,13 +67,14 @@ int getdent(struct file *f, struct petix_dirent *d) {
 
         size_t prefix_len = strnlen(name, sizeof(name));
 
-        if (strncmp(tar->name, name, prefix_len)) {
+        if (tar->name[0] == '\0' || strncmp(tar->name, name, prefix_len) != 0) {
             d->present = false;
             release_lock(&(f->inode.fs->lock));
             return 0;
         }
 
-        if (strchr(tar->name + prefix_len, '/') == NULL) {
+        char * s = strchr(tar->name + prefix_len, '/');
+        if (s == NULL || (s[0] == '/' && s[1] == '\0')) {
             d->inode_id = blk;
             d->present = true;
             strncpy(d->name, tar->name + prefix_len, sizeof(name));
@@ -79,7 +89,6 @@ int getdent(struct file *f, struct petix_dirent *d) {
     panic("unreachable code");
 }
 
-#define ID_ROOT 0
 
 static int getroot(struct fs_inst *fs, struct inode *in) {
    in->fs = fs;
@@ -106,7 +115,12 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
             return -ENOENT;
         }
 
-        if (strncmp(tar->name, path, 100) == 0) {
+        size_t pathlen = strnlen(path, 100);
+        if (strncmp(tar->name, path, 100) == 0 ||
+            (strncmp(tar->name, path, pathlen)
+             && tar->name[pathlen] == '/'
+             && tar->name[pathlen+1] == '\0')) {
+
             in->exec = (tar_field(tar->mode) & 0111) != 0;
             if (tar->typeflag == REGTYPE) {
                 in->ftype = FT_REGULAR;
