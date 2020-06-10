@@ -103,7 +103,7 @@ int proc_get_terminated_child(struct pcb *pcb, pid_t pid) {
 
         if (cpcb->ppid == pcb->pid && (pid == -1 || pid == cpcb->pid)) {
             if (cpcb->rs == RS_TERMINATED) {
-                pcb->wait_pid = pcb->pid;
+                pcb->wait_pid = cpcb->pid;
                 release_global();
                 return 0;
             } else {
