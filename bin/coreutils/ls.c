@@ -7,12 +7,17 @@
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
+    if (argc > 2) {
         fprintf(stderr, "usage: %s dir\n", argv[0]);
         return 1;
     }
 
-    int fd = open(argv[1], O_DIRECTORY);
+    const char *dir = "/";
+    if (argc == 2) {
+        dir = argv[1];
+    }
+
+    int fd = open(dir, O_DIRECTORY);
     if (fd == -1) {
         perror("open(2)");
         return 1;
