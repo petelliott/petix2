@@ -6,24 +6,19 @@
 #include <stdbool.h>
 #include "sync.h"
 
-#define FILE_NAME_LEN 256
 #define PATH_MAX 4096
 
 struct inode;
 struct file;
 struct fs_inst;
 
-struct dirent {
-    char name[FILE_NAME_LEN];
-    //TODO: other stuff?
-};
-
 struct file_ops {
-    int (*open)(struct inode *, struct file *);
+    int (*open)(struct inode *, struct file *, int);
 
     off_t (*lseek)(struct file *, off_t, int);
     ssize_t (*read)(struct file *, char *, size_t);
     ssize_t (*write)(struct file *, const char *, size_t);
+    int (*getdent)(struct file *, struct petix_dirent *);
 
     int (*close)(struct file *);
 };
@@ -72,7 +67,7 @@ struct fs_inst {
 int fs_mount(const char *targ, struct inode *src, const struct inode_ops *fs);
 int fs_umount(const char *targ);
 
-int fs_open(struct inode *in, struct file *f);
+int fs_open(struct inode *in, struct file *f, int flags);
 
 int fs_lookup(const char *path, struct inode *inode);
 

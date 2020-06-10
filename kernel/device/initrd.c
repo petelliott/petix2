@@ -4,7 +4,7 @@
 
 static void *start, *end;
 
-static int open(struct inode *in, struct file *file) {
+static int open(struct inode *in, struct file *file, int flags) {
     file->size = end - start;
     return 0;
 }

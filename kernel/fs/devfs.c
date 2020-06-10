@@ -4,7 +4,7 @@
 #include "../device.h"
 
 
-static int dopen(struct inode *in, struct file *f) {
+static int dopen(struct inode *in, struct file *f, int flags) {
     return -EPERM;
 }
 

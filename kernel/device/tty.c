@@ -69,7 +69,7 @@ static struct file_ops fops;
 static petix_lock_t tty_lock;
 
 
-static int dev_open(struct inode *in, struct file *file) {
+static int dev_open(struct inode *in, struct file *file, int flags) {
     file->private_data = false;
     return 0;
 }

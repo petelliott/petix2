@@ -7,7 +7,7 @@
 #include "../sync.h"
 
 
-static int topen(struct inode *in, struct file *f) {
+static int topen(struct inode *in, struct file *f, int flags) {
     f->size = in->size;
     f->private_data = (in->inode_id + 1)*TAR_BLOCKSIZE;
     return 0;
@@ -31,6 +31,54 @@ static ssize_t tread(struct file *f, char *buf, size_t n) {
     return ret;
 }
 
+int getdent(struct file *f, struct petix_dirent *d) {
+    if (f->inode.ftype != FT_DIR) {
+        return -ENOTDIR;
+    }
+
+    acquire_lock(&(f->inode.fs->lock));
+
+    char name[100];
+    off_t off = f->private_data - TAR_BLOCKSIZE;
+
+    f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
+    f->inode.fs->file.fops->read(&(f->inode.fs->file), name, sizeof(name));
+
+    char buf[TAR_BLOCKSIZE];
+
+    struct tar *const tar = (void *) buf;
+
+    size_t initblk = (f->private_data + f->offset)/TAR_BLOCKSIZE;
+    for (size_t blk = initblk;; blk = tar_next_blk(tar, blk)) {
+        f->inode.fs->file.fops->lseek(&(f->inode.fs->file),
+                                      blk*TAR_BLOCKSIZE, SEEK_SET);
+        f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, TAR_BLOCKSIZE);
+
+        f->offset = blk*TAR_BLOCKSIZE;
+
+        size_t prefix_len = strnlen(name, sizeof(name));
+
+        if (strncmp(tar->name, name, prefix_len)) {
+            d->present = false;
+            release_lock(&(f->inode.fs->lock));
+            return 0;
+        }
+
+        if (strchr(tar->name + prefix_len, '/') == NULL) {
+            d->inode_id = blk;
+            d->present = true;
+            strncpy(d->name, tar->name + prefix_len, sizeof(name));
+
+            blk = tar_next_blk(tar, blk);
+            f->offset = blk*TAR_BLOCKSIZE - f->private_data;
+
+            release_lock(&(f->inode.fs->lock));
+            return 0;
+        }
+    }
+    panic("unreachable code");
+}
+
 #define ID_ROOT 0
 
 static int getroot(struct fs_inst *fs, struct inode *in) {
@@ -46,8 +94,6 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
     char buf[TAR_BLOCKSIZE];
 
     acquire_lock(&(fs->lock));
-
-    fs->file.fops->lseek(&(fs->file), 0, SEEK_SET);
 
     struct tar *const tar = (void *) buf;
 
@@ -92,6 +138,7 @@ const struct inode_ops *get_tarfs(void) {
             .open = topen,
             .lseek = fs_default_lseek,
             .read = tread,
+            .getdent = getdent
         },
         .getroot = getroot,
         .lookup_all = lookup_all

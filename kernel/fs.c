@@ -5,12 +5,16 @@
 #include "sync.h"
 #include "kmalloc.h"
 #include <string.h>
+#include <fcntl.h>
 
 
 static struct file_ops const * devices[256];
 
-int fs_open(struct inode *in, struct file *f) {
+int fs_open(struct inode *in, struct file *f, int flags) {
     if (in->ftype == FT_SPECIAL) {
+        if (flags & O_DIRECTORY) {
+            return -ENOTDIR;
+        }
         const struct file_ops *fops = devices[MAJOR(in->dev)];
         if (fops == NULL) {
             return -ENXIO;
@@ -21,16 +25,27 @@ int fs_open(struct inode *in, struct file *f) {
         f->fops = fops;
         kassert(fops->open != NULL);
 
-        return fops->open(in, f);
+        return fops->open(in, f, flags);
     } else if (in->ftype == FT_REGULAR) {
+        if (flags & O_DIRECTORY) {
+            return -ENOTDIR;
+        }
         f->inode = *in;
         f->offset = 0;
         f->fops = &(in->fs->iops->reg_ops);
         kassert(f->fops->open != NULL);
 
-        return f->fops->open(in, f);
+        return f->fops->open(in, f, flags);
     } else if (in->ftype == FT_DIR) {
-        return -EISDIR;
+        if (!(flags & O_DIRECTORY)) {
+            return -EISDIR;
+        }
+        f->inode = *in;
+        f->offset = 0;
+        f->fops = &(in->fs->iops->reg_ops);
+        kassert(f->fops->open != NULL);
+
+        return f->fops->open(in, f, flags);
     } else if (in->ftype == FT_LINK) {
         panic("symlinks are not supported yet");
     }
@@ -202,7 +217,7 @@ int fs_mount(const char *targ, struct inode *src, const struct inode_ops *fs) {
 
     unmount_child(node->child);
     node->mountpoint = true;
-    fs_open(src, &(node->fs.file));
+    fs_open(src, &(node->fs.file), 0);
     node->fs.iops = fs;
 
     release_lock(&mount_lock);

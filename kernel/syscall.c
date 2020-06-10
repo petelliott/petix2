@@ -18,6 +18,7 @@ syscall_t syscall_table[256] = {
     [SYS_NR_CLOSE] = sys_close,
     [SYS_NR_WAITPID] = sys_waitpid,
     [SYS_NR_DUP2] = sys_dup2,
+    [SYS_NR_GETDENT] = sys_getdent,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK] = sys_fork,
     [SYS_NR_EXEC] = sys_exec,
@@ -72,7 +73,7 @@ ssize_t sys_open(const char *path, int flags, int mode) {
         return fd;
     }
 
-    err = fs_open(&in, &(pcb->fds[fd].file));
+    err = fs_open(&in, &(pcb->fds[fd].file), flags);
     if (err < 0) {
         release_fd(pcb, fd);
         return err;
@@ -119,6 +120,22 @@ ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
 
     pcb->fds[fd2] = pcb->fds[fd];
     return fd2;
+}
+
+ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
+    struct pcb *pcb = get_pcb(get_pid());
+
+    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+        return -EBADF;
+    }
+
+    struct file *f = &(pcb->fds[fd].file);
+
+    if (f->fops->getdent == NULL) {
+        return -EPERM;
+    }
+
+    return f->fops->getdent(f, dent);
 }
 
 ssize_t sys_waitpid(pid_t pid, int *wstatus, int options) {
@@ -214,7 +231,7 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         return -EACCES;
     }
 
-    err = fs_open(&in, &f);
+    err = fs_open(&in, &f, 0);
     if (err < 0) {
         return err;
     }

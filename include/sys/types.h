@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef long ssize_t;
 typedef long long off_t;
@@ -13,5 +14,13 @@ typedef uint32_t dev_t;
 #define MAJOR(dev) (((dev) >> 16) & 0xffff)
 #define MINOR(dev) ((dev) & 0xffff)
 #define MKDEV(ma, mi) (((ma) << 16) | (mi))
+
+#define FILE_NAME_LEN 256
+
+struct petix_dirent {
+    size_t inode_id;
+    bool present;
+    char name[FILE_NAME_LEN];
+};
 
 #endif
