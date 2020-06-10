@@ -218,6 +218,10 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     b = *(char *) 0xffffd000;
     b = *(char *) 0xffffc000;
 
+    // prevent -Wunused-but-set and -Wset-but-unused
+    b = b;
+
+
     if (path == NULL) {
         return -EINVAL;
     }

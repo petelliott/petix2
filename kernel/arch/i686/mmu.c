@@ -14,7 +14,7 @@ void *virt_to_phys(const void *virt) {
     uint32_t addr = (uint32_t) virt;
 
     uint32_t dir_idx, tab_idx, offset;
-    split_addr(addr, dir_idx, tab_idx, offset);
+    split_addr_o(addr, dir_idx, tab_idx, offset);
 
     struct page_dir_ent *pde = get_page_dir();
 

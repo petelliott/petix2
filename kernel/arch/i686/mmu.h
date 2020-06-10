@@ -39,8 +39,13 @@ struct page_tab_ent {
 #define PAGE_MASK 0xfff
 #define PAGE_SHIFT 12
 
-#define split_addr(addr,d,t,o) {                \
+#define split_addr_o(addr,d,t,o) {              \
         o  = (addr) & 0xfff;                    \
+        t = ((addr) >> 12) & 0x003ff;           \
+        d = (addr) >> 22;                       \
+    }
+
+#define split_addr(addr,d,t) {                  \
         t = ((addr) >> 12) & 0x003ff;           \
         d = (addr) >> 22;                       \
     }

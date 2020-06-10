@@ -68,8 +68,8 @@ static void page_fault_handler(struct pushed_regs *regs) {
         panic("unrecoverable page fault");
     }
 
-    uint32_t dir_idx, tab_idx, offset;
-    split_addr(linaddr, dir_idx, tab_idx, offset);
+    uint32_t dir_idx, tab_idx;
+    split_addr(linaddr, dir_idx, tab_idx);
 
     if (!pd[dir_idx].present && !pd[dir_idx].petix_alloc) {
         kprintf("this should be a segfault. pfla=%lx, ec=%lx, %%eip=%lx\n",
