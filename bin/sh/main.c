@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include "read.h"
 
 int main(int argc, char *argv[]) {
     // fake shell
@@ -16,16 +17,11 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        char *save;
-
-        size_t i = 0;
-        for (char *c = strtok_r(buff, " \t\n", &save); c != NULL;
-             c = strtok_r(NULL, " \t\n", &save)) {
-
-            args[i++] = c;
+        char *prg = parse_line(buff, args);
+        if (prg == NULL) {
+            // ignore comments
+            continue;
         }
-        args[i] = NULL;
-
 
         pid_t pid = fork();
         if (pid == -1) {
@@ -41,11 +37,6 @@ int main(int argc, char *argv[]) {
             waitpid(pid, &wstatus, 0);
         }
 
-        /*
-        for (size_t j = 0; j < i; ++j) {
-            printf("'%s'\n", args[j]);
-        }
-        */
     }
     fputs("\ngoodbye.\n", stdout);
 
