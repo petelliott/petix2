@@ -42,3 +42,10 @@ void enable_paging(void) {
                   "mov %%eax, %%cr0\n"
                   ::: "eax");
 }
+
+void enable_global_pages(void) {
+    asm volatile ("mov %%cr4, %%eax\n"
+                  "or $0x00000080, %%eax\n"
+                  "mov %%eax, %%cr4\n"
+                  ::: "eax");
+}

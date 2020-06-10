@@ -35,6 +35,7 @@ void init_paging(void) {
             struct page_tab_ent *pte = &(page_tabs[i].ents[j]);
             pte->present = 1;
             pte->rw = 1;
+            pte->global = 1;
             pte->addr = (i*(PAGE_SIZE*PTAB_SIZE) + j*PAGE_SIZE) >> PAGE_SHIFT;
         }
     }
@@ -47,6 +48,7 @@ void init_paging(void) {
 
     load_page_dir(kpagedir.ents);
     enable_paging();
+    enable_global_pages();
 
     kprintf("paging initialized\n");
 }
@@ -83,7 +85,6 @@ static void page_fault_handler(struct pushed_regs *regs) {
         memset(tab, 0, PAGE_SIZE);
         for (size_t i = 0; i < PTAB_SIZE; ++i) {
             tab[i].petix_alloc = 1;
-            tab[i].petix_alloc = 1;
         }
         pd[dir_idx].present = 1;
         pd[dir_idx].page_table = (uint32_t) tab >> PAGE_SHIFT;
@@ -105,6 +106,7 @@ static void page_fault_handler(struct pushed_regs *regs) {
         void *page = alloc_page_ptr();
         memset(page, 0, PAGE_SIZE);
         tab[tab_idx].present = 1;
+        tab[tab_idx].global = 0;
         tab[tab_idx].addr = (uint32_t) page >> PAGE_SHIFT;
     }
 

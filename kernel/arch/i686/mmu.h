@@ -65,5 +65,6 @@ void *virt_to_phys(const void *virt);
 void load_page_dir(struct page_dir_ent *dir);
 
 void enable_paging(void);
+void enable_global_pages(void);
 
 #endif
