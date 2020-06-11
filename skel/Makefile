@@ -1,4 +1,4 @@
-CONFS=boot/grub/grub.cfg etc/motd dev/
+CONFS=boot/grub/grub.cfg etc dev
 
 ROOTCONFS=$(addprefix $(ROOT)/,$(CONFS))
 

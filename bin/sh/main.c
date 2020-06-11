@@ -6,12 +6,32 @@
 
 int main(int argc, char *argv[]) {
     // fake shell
+    bool prompt;
+    FILE *f;
+
+    if (argc == 1) {
+        prompt = true;
+        f = stdin;
+    } else if (argc == 2) {
+        prompt = false;
+        f = fopen(argv[1], "r");
+        if (f == NULL) {
+            perror("fopen(3)");
+            return 1;
+        }
+    } else {
+        fprintf(stderr, "usage: %s [script]\n", argv[0]);
+        return 1;
+    }
+
 
     char *args[32];
     char buff[1024];
-    while (!feof(stdin)) {
-        printf("$ ");
-        fgets(buff, sizeof(buff), stdin);
+    while (!feof(f)) {
+        if (prompt) {
+            printf("$ ");
+        }
+        fgets(buff, sizeof(buff), f);
 
         if (feof(stdin)) {
             break;
@@ -38,7 +58,10 @@ int main(int argc, char *argv[]) {
         }
 
     }
-    fputs("\ngoodbye.\n", stdout);
+    fclose(f);
+    if (prompt) {
+        fputs("\ngoodbye.\n", stdout);
+    }
 
     return 0;
 }

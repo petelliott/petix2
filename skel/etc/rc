@@ -1,0 +1,3 @@
+#!/bin/sh
+echo im a shell script
+echo i can run more than one command

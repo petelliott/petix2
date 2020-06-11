@@ -34,7 +34,8 @@ int main(int argc, char *argv[]) {
     dup2(ttyfd, STDOUT_FILENO);
     dup2(ttyfd, STDERR_FILENO);
 
-    execve("/bin/sh", NULL, NULL);
+    char *const nargv[] = {"/bin/sh", NULL};
+    execve("/bin/sh", nargv, NULL);
 
     return 0;
 }

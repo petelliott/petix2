@@ -217,6 +217,10 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     b = *(char *) 0xffffe000;
     b = *(char *) 0xffffd000;
     b = *(char *) 0xffffc000;
+    b = *(char *) 0xffffb000;
+    b = *(char *) 0xffffa000;
+    b = *(char *) 0xffff9000;
+    b = *(char *) 0xffff8000;
 
     // prevent -Wunused-but-set and -Wset-but-unused
     b = b;
@@ -257,6 +261,27 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         f.fops->close(&f);
     }
 
+    char *cdata = data;
+    if (cdata[0] == '#' && cdata[1] == '!') {
+        //TODO dont read the whole file to check this
+        char *save;
+        char *script = strtok_r(cdata+2, " \n\t", &save);
+        char scbuff[PATH_MAX];
+        strncpy(scbuff, script, PATH_MAX);
+        kfree_sync(data);
+
+        char *newargv[128] = {NULL};
+        newargv[0] = scbuff;
+        for (size_t i = 0; i < 128 && argv !=NULL && argv[i] != NULL; ++i) {
+            newargv[i+1] = argv[i];
+        }
+        return sys_exec(scbuff, newargv, envp);
+    }
+
+    if (!check_elf_header(data)) {
+        return -ENOEXEC;
+    }
+
 
     // push args;
     size_t argc = 0;
@@ -293,8 +318,6 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     uintptr_t entry = load_elf_file(data);
 
     kfree_sync(data);
-
-
 
     //TODO make this more portable
     asm volatile ("mov %1, %%esp\n"

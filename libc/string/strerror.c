@@ -8,6 +8,7 @@ static const char * const errtab[] = {
     [EINTR]  = "Interrupted system call",
     [EIO]    = "Input/output error",
     [ENXIO]  = "No such device or address",
+    [ENOEXEC] = "Exec format error",
     [EBADF]  = "Bad file descriptor",
     [ECHILD] = "No child processes",
     [EAGAIN] = "Resource temporarily unavailable",

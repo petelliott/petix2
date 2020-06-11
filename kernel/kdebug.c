@@ -20,14 +20,21 @@ void kprintf(const char *fmt, ...) {
     va_end(ap);
 }
 
+static void halt_forever(void) {
+    cli();
+    for (;;) {
+        halt();
+    }
+}
+
 void kassert_internal(int tst, int line, const char *file, const char *tststr) {
     if (!tst) {
         kprintf("kassert failed (%s:%i): %s\n", file, line, tststr);
-        halt();
+        halt_forever();
     }
 }
 
 void panic_internal(const char *str, int line, const char *file) {
     kprintf("kernel panic (%s:%i): %s\n", file, line, str);
-    halt();
+    halt_forever();
 }
