@@ -3,7 +3,9 @@
 #include "sync.h"
 #include "arch/cpu.h"
 #include "arch/switch.h"
+#include "kmalloc.h"
 #include <errno.h>
+#include <string.h>
 
 #define PTABLE_SIZE 1024
 
@@ -29,6 +31,8 @@ void init_proc(void) {
     pcb->rs = RS_RUNNING;
     pcb->addr_space = create_proc_addr_space();
     use_addr_space(pcb->addr_space);
+
+    memset(pcb->fds, 0, sizeof(pcb->fds));
 
     acquire_global();
     register_timer(timer_handler);
@@ -80,8 +84,10 @@ struct pcb *alloc_proc(void) {
 
 int alloc_fd(struct pcb *pcb) {
     for (int i = 0; i < MAX_FDS; ++i) {
-        if (!pcb->fds[i].valid) {
-            pcb->fds[i].valid = true;
+        if (pcb->fds[i] == NULL) {
+            pcb->fds[i] = kmalloc_sync(sizeof(struct file));
+            kprintf("allocating file %p\n", pcb->fds[i]);
+            pcb->fds[i]->refcnt = 1;
             return i;
         }
     }
@@ -89,7 +95,20 @@ int alloc_fd(struct pcb *pcb) {
 }
 
 void release_fd(struct pcb *pcb, int i) {
-    pcb->fds[i].valid = false;
+    kassert(pcb->fds[i] != NULL);
+    kassert(pcb->fds[i]->refcnt != 0);
+
+    pcb->fds[i]->refcnt--;
+
+    if (pcb->fds[i]->refcnt == 0) {
+        kprintf("freeing file %p\n", pcb->fds[i]);
+        kfree_sync(pcb->fds[i]);
+    }
+    pcb->fds[i] = NULL;
+}
+
+void dup_fd(struct pcb *pcb, int fd) {
+    pcb->fds[fd]->refcnt++;
 }
 
 int proc_get_terminated_child(struct pcb *pcb, pid_t pid) {

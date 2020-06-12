@@ -30,10 +30,7 @@ struct pcb {
     enum ready_state rs;
     uint8_t return_code;
     pid_t wait_pid;
-    struct {
-        struct file file;
-        bool valid;
-    } fds[MAX_FDS];
+    struct file *fds[MAX_FDS];
 
     //TODO all kinds of other stuff
 };
@@ -47,7 +44,8 @@ struct pcb *get_pcb(pid_t pid);
 struct pcb *alloc_proc(void);
 
 int alloc_fd(struct pcb *pcb);
-void release_fd(struct pcb *pcb, int i);
+void release_fd(struct pcb *pcb, int fd);
+void dup_fd(struct pcb *pcb, int fd);
 
 // waits for a child and sets wait_pid if -1
 int proc_get_terminated_child(struct pcb *pcb, pid_t pid);

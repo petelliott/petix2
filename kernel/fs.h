@@ -55,6 +55,7 @@ struct file {
     struct inode inode;
     off_t private_data;
     const struct file_ops *fops;
+    long refcnt; // used only for file descriptor files
 };
 
 struct fs_inst {

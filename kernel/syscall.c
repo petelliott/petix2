@@ -29,11 +29,11 @@ syscall_t syscall_table[256] = {
 ssize_t sys_read(ssize_t fd, char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
         return -EBADF;
     }
 
-    struct file *f = &(pcb->fds[fd].file);
+    struct file *f = pcb->fds[fd];
 
     if (f->fops->read == NULL) {
         return -EPERM;
@@ -45,11 +45,11 @@ ssize_t sys_read(ssize_t fd, char *buf, size_t count) {
 ssize_t sys_write(ssize_t fd, const char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
         return -EBADF;
     }
 
-    struct file *f = &(pcb->fds[fd].file);
+    struct file *f = pcb->fds[fd];
 
     if (f->fops->write == NULL) {
         return -EPERM;
@@ -73,7 +73,7 @@ ssize_t sys_open(const char *path, int flags, int mode) {
         return fd;
     }
 
-    err = fs_open(&in, &(pcb->fds[fd].file), flags);
+    err = fs_open(&in, pcb->fds[fd], flags);
     if (err < 0) {
         release_fd(pcb, fd);
         return err;
@@ -85,23 +85,24 @@ ssize_t sys_open(const char *path, int flags, int mode) {
 ssize_t sys_close(ssize_t fd) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
         return -EBADF;
     }
 
-    struct file *f = &(pcb->fds[fd].file);
-    release_fd(pcb, fd);
+    struct file *f = pcb->fds[fd];
 
+    int ret = 0;
     if (f->fops->close != NULL) {
-        return f->fops->close(f);
-    } else {
-        return 0;
+        ret = f->fops->close(f);
     }
+
+    release_fd(pcb, fd);
+    return ret;
 }
 
 ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
     struct pcb *pcb = get_pcb(get_pid());
-    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
         return -EBADF;
     }
 
@@ -113,11 +114,11 @@ ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
         return fd;
     }
 
-    if (pcb->fds[fd2].valid) {
+    if (pcb->fds[fd2] != NULL) {
         sys_close(fd2);
     }
 
-
+    dup_fd(pcb, fd);
     pcb->fds[fd2] = pcb->fds[fd];
     return fd2;
 }
@@ -125,11 +126,11 @@ ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
 ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || !pcb->fds[fd].valid) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
         return -EBADF;
     }
 
-    struct file *f = &(pcb->fds[fd].file);
+    struct file *f = pcb->fds[fd];
 
     if (f->inode.ftype != FT_DIR) {
         return -ENOTDIR;
@@ -196,6 +197,12 @@ ssize_t sys_fork(void) {
     new->ppid = old->pid;
     new->rs = RS_READY;
     memcpy(new->fds, old->fds, sizeof(new->fds));
+
+    for (size_t i = 0; i < MAX_FDS; ++i) {
+        if (new->fds[i] != NULL) {
+            dup_fd(new, i);
+        }
+    }
 
     fork_switchable(&(new->stack_ptr), old->addr_space, &(new->addr_space));
 
@@ -345,6 +352,12 @@ ssize_t sys_exit(size_t code) {
 
             ppcb->wait_pid = pcb->pid;
             ppcb->rs = RS_READY;
+        }
+    }
+
+    for (size_t i = 0; i < MAX_FDS; ++i) {
+        if (pcb->fds[i] != NULL) {
+            sys_close(i);
         }
     }
 
