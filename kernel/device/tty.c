@@ -297,11 +297,11 @@ static ssize_t dev_read(struct file *f, char *buf, size_t count) {
             size_t start = fbase;
             size_t len = MIN(lbase-fbase, count);
             fbase += len;
-            release_global();
 
             memcpy(buf, filebuff+start, len);
             count -= len;
             buf += len;
+
         } else if (lbase < fbase) {
             size_t start1 = fbase;
             size_t len1 = MIN(BUFF_LEN - fbase, count);
@@ -309,19 +309,17 @@ static ssize_t dev_read(struct file *f, char *buf, size_t count) {
             fbase %= BUFF_LEN;
             count -= len1;
 
-            size_t start2 = fbase;
+            size_t start2 = 0;
             size_t len2 = MIN(lbase - 0, count);
             fbase += len2;
             fbase %= BUFF_LEN;
             count -= len2;
-            release_global();
 
             memcpy(buf, filebuff+start1, len1);
             memcpy(buf+len1, filebuff+start2, len2);
             buf += len1+len2;
-        } else {
-            release_global();
         }
+        release_global();
 
         //eot
         if (*(buf-1) == 0x04) {
