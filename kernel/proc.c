@@ -86,7 +86,6 @@ int alloc_fd(struct pcb *pcb) {
     for (int i = 0; i < MAX_FDS; ++i) {
         if (pcb->fds[i] == NULL) {
             pcb->fds[i] = kmalloc_sync(sizeof(struct file));
-            kprintf("allocating file %p\n", pcb->fds[i]);
             pcb->fds[i]->refcnt = 1;
             return i;
         }
@@ -101,7 +100,6 @@ void release_fd(struct pcb *pcb, int i) {
     pcb->fds[i]->refcnt--;
 
     if (pcb->fds[i]->refcnt == 0) {
-        kprintf("freeing file %p\n", pcb->fds[i]);
         kfree_sync(pcb->fds[i]);
     }
     pcb->fds[i] = NULL;

@@ -256,10 +256,6 @@ static void onkeypress(int scancode) {
 #define MIN(a, b) ((a < b)? a:b)
 
 static ssize_t dev_read(struct file *f, char *buf, size_t count) {
-    if (f->private_data == true) {
-        return 0;
-    }
-
     acquire_lock(&read_lock);
 
     ssize_t c = count;
@@ -283,9 +279,9 @@ static ssize_t dev_read(struct file *f, char *buf, size_t count) {
 
             size_t start2 = fbase;
             size_t len2 = MIN(lbase - 0, count);
-            fbase += len1;
+            fbase += len2;
             fbase %= BUFF_LEN;
-            count -= len1;
+            count -= len2;
             release_global();
 
             memcpy(buf, filebuff+start1, len1);
@@ -297,15 +293,22 @@ static ssize_t dev_read(struct file *f, char *buf, size_t count) {
 
         //eot
         if (*(buf-1) == 0x04) {
-            f->private_data = true;
             release_lock(&read_lock);
             return (c-count) - 1;
+        } else if (*(buf-1) == '\n') {
+            release_lock(&read_lock);
+            return (c-count);
         }
 
         if (count > 0) {
             cond_wait(&read_sem);
         }
     }
+
+    if (filebuff[fbase] == 0x04) {
+        fbase = (fbase + 1) % BUFF_LEN;
+    }
+
     release_lock(&read_lock);
     return c;
 }
