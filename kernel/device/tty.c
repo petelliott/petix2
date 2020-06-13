@@ -120,6 +120,7 @@ static void scroll_up(void) {
     row--;
 }
 
+
 // output functions
 static void term_putchar(char c) {
     if (c == '\n') {
@@ -168,6 +169,22 @@ ssize_t tty_write(const void *buf, size_t count) {
 
 // input functions
 
+
+//converts from ascii to caret notation
+static const char *const echo_map[128] = {
+    "^@", "^A", "^B", "^C", "^D", "^E", "^F", "^G", "\b", "        ",
+    "\n", "^K", "^L", "^M", "^N", "^O", "^P", "^Q", "^R", "^S", "^T",
+    "^U", "^V", "^W", "^X", "^Y", "^Z", "^[", "^\\", "^]", "^^", "^_",
+    " ", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",",
+    "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F",
+    "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+    "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_", "`",
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+    "{", "|", "}", "~", "^?"
+};
+
 // stolen from serenityos
 static const char en_map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',
@@ -197,19 +214,32 @@ static size_t loff   = 0;
 static bool shifted = false;
 static bool ctrld   = false;
 
+// returns 255 if invalid
 static char sc_to_ascii(int scancode) {
     if (ctrld) {
         char ch = en_map[scancode];
-        if (ch >= 'a' && ch <= 'z') {
+        if (ch == 0) {
+            return 255;
+        }
+
+        if (ch >= 'a') {
             return ch - 0x60;
+        } else {
+            return 0;
         }
     }
 
+    char ret;
     if (shifted) {
-        return en_shift_map[scancode];
+        ret = en_shift_map[scancode];
     } else {
-        return en_map[scancode];
+        ret = en_map[scancode];
     }
+
+    if (ret == 0) {
+        return 255;
+    }
+    return ret;
 }
 
 petix_lock_t read_lock;
@@ -218,9 +248,9 @@ petix_sem_t  read_sem;
 // interrupt handler
 static void onkeypress(int scancode) {
     acquire_global();
-    if (scancode == 0x36) {
+    if (scancode == 0x36 || scancode == 0x2a) {
         shifted = true;
-    } else if (scancode == 0xb6) {
+    } else if (scancode == 0xb6 || scancode == 0xaa) {
         shifted = false;
     } else if (scancode == 0x1d) {
         ctrld = true;
@@ -228,19 +258,21 @@ static void onkeypress(int scancode) {
         ctrld = false;
     } else if (scancode < 0x80) {
         char ch = sc_to_ascii(scancode);
-        if (ch != 0) {
+        if (ch != 255) {
             if (ch == '\b') {
                 if (loff != lbase) {
                     loff = (((loff - 1)%BUFF_LEN)+BUFF_LEN) % BUFF_LEN;
-                    tty_write("\b", 1);
+                    tty_write("\b\b\b\b\b\b\b\b\b",
+                              strlen(echo_map[(uint8_t)filebuff[loff]]));
                 }
             } else {
 
                 filebuff[loff] = ch;
                 loff = (loff+1) % BUFF_LEN;
 
-                if (ch > 0x06) {
-                    tty_write(&ch, 1);
+                if (ch != 0x04) {
+                    const char *seq = echo_map[(uint8_t)ch];
+                    tty_write(seq, strlen(seq));
                 }
 
                 if (ch == '\n' || ch == 0x04) {
