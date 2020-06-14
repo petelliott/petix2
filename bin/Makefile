@@ -8,6 +8,6 @@ dir:
 
 clean: subdir_clean
 
-DIRS=init getty sh coreutils
+DIRS=init getty sh coreutils test
 
 include ../subdirs.mk

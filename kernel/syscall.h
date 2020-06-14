@@ -19,6 +19,8 @@ ssize_t sys_dup2(ssize_t fd, ssize_t fd2);
 
 ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent);
 
+ssize_t sys_pipe(int filedes[2]);
+
 ssize_t sys_waitpid(pid_t pid, int *wstatus, int options);
 
 ssize_t sys_sched_yield(void);

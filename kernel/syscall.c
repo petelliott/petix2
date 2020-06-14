@@ -8,21 +8,23 @@
 #include "sync.h"
 #include "fs.h"
 #include "kmalloc.h"
+#include "pipe.h"
 #include <errno.h>
 #include <string.h>
 
 syscall_t syscall_table[256] = {
-    [SYS_NR_READ] = sys_read,
-    [SYS_NR_WRITE] = sys_write,
-    [SYS_NR_OPEN] = sys_open,
-    [SYS_NR_CLOSE] = sys_close,
+    [SYS_NR_READ]    = sys_read,
+    [SYS_NR_WRITE]   = sys_write,
+    [SYS_NR_OPEN]    = sys_open,
+    [SYS_NR_CLOSE]   = sys_close,
     [SYS_NR_WAITPID] = sys_waitpid,
-    [SYS_NR_DUP2] = sys_dup2,
+    [SYS_NR_DUP2]    = sys_dup2,
     [SYS_NR_GETDENT] = sys_getdent,
+    [SYS_NR_PIPE]    = sys_pipe,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
-    [SYS_NR_FORK] = sys_fork,
-    [SYS_NR_EXEC] = sys_exec,
-    [SYS_NR_EXIT] = sys_exit,
+    [SYS_NR_FORK]     = sys_fork,
+    [SYS_NR_EXEC]     = sys_exec,
+    [SYS_NR_EXIT]     = sys_exit,
     [SYS_NR_DB_PRINT] = sys_db_print
 };
 
@@ -141,6 +143,27 @@ ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
     }
 
     return f->fops->getdent(f, dent);
+}
+
+ssize_t sys_pipe(int filedes[2]) {
+    struct pcb *pcb = get_pcb(get_pid());
+
+    int fd1 = alloc_fd(pcb);
+    if (fd1 < 0) {
+        return fd1;
+    }
+
+    int fd2 = alloc_fd(pcb);
+    if (fd2 < 0) {
+        return fd2;
+    }
+
+    open_pipe(pcb->fds[fd1], pcb->fds[fd2]);
+
+    filedes[0] = fd1;
+    filedes[1] = fd2;
+
+    return 0;
 }
 
 ssize_t sys_waitpid(pid_t pid, int *wstatus, int options) {

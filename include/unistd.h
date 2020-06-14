@@ -25,5 +25,6 @@ pid_t fork(void);
 int execve(const char *path, char *const argv[], char *const envp[]);
 int execvp(const char *path, char *const argv[]);
 
+int pipe(int filedes[2]);
 
 #endif

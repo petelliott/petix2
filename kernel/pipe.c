@@ -2,6 +2,7 @@
 #include "kmalloc.h"
 #include "string.h"
 #include <errno.h>
+#include "kdebug.h"
 
 #define READ_END 0x100000000ll
 #define WRITE_END 0x200000000ll
@@ -21,7 +22,7 @@ static ssize_t pread(struct file *f, char *buf, size_t count) {
 
     ssize_t c = count;
     while (count > 0) {
-        if (!pipe->owrite) {
+        if (!pipe->owrite && pipe->hi == pipe->lo) {
             return c-count;
         }
 
@@ -87,6 +88,11 @@ static ssize_t pwrite(struct file *f, const char *buf, size_t count) {
 }
 
 static int pclose(struct file *f) {
+    if (f->private_data == 0) {
+        // pipe is already closed and freed
+        return 0;
+    }
+
     struct pipe *pipe = (void *)(uintptr_t) (f->private_data & 0xffffffff);
     acquire_lock(&(pipe->lock));
 
@@ -102,9 +108,8 @@ static int pclose(struct file *f) {
     release_lock(&(pipe->lock));
     if (!pipe->oread && !pipe->owrite) {
         kfree_sync(pipe);
+        f->private_data = 0;
     }
-
-    f->private_data = 0;
 
     return 0;
 }
