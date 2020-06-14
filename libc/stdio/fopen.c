@@ -2,7 +2,7 @@
 #include <fcntl.h>
 
 FILE *fopen(const char *path, const char *mode) {
-    for (size_t i = 0; i < MAX_FILES; ++i) {
+    for (size_t i = 0; i < FOPEN_MAX; ++i) {
         if (!stdio_files[i].valid) {
             FILE *f = &(stdio_files[i]);
             f->fd = open(path, 0);
@@ -14,6 +14,7 @@ FILE *fopen(const char *path, const char *mode) {
             f->err = 0;
             f->valid = true;
             f->eof = false;
+            f->bf = _IOFBF;
             return f;
         }
     }

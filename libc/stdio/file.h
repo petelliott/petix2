@@ -9,12 +9,13 @@
 struct _stdio_file {
     int fd;
     int err;
+    int bf;
     bool valid;
     bool eof;
+    size_t start, end;
+    char buffer[BUFSIZ];
 };
 
-#define MAX_FILES 16
-
-extern FILE stdio_files[MAX_FILES];
+extern FILE stdio_files[FOPEN_MAX];
 
 #endif

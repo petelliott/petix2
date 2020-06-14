@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
     while (!feof(f)) {
         if (prompt) {
             printf("$ ");
+            fflush(stdout);
         }
         fgets(buff, sizeof(buff), f);
 

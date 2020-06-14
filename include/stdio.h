@@ -10,12 +10,21 @@ extern FILE *stdout;
 extern FILE *stderr;
 
 #define EOF -1
+#define FOPEN_MAX 16
+
+#define _IOFBF 0
+#define _IOLBF 1
+#define _IONBF 2
+
+#define BUFSIZ 4096
 
 FILE *fopen(const char *path, const char *mode);
 
 size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 int fclose(FILE *stream);
+
+int fflush(FILE *stream);
 
 int fputc(int c, FILE *stream);
 int fputs(const char *s, FILE *stream);

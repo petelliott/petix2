@@ -11,12 +11,12 @@ OBJS = string/strcmp.c.o string/strlen.c.o string/memset.c.o \
        stdio/fputc.c.o stdio/printf.c.o stdio/fgetc.c.o \
        stdio/fgets.c.o stdio/feof.c.o stdio/fputs.c.o stdio/perror.c.o \
        stdio/fopen.c.o string/strcat.c.o dirent/getdent.c.o \
-       unistd/pipe.c.o
+       unistd/pipe.c.o string/memchr.c.o stdio/fflush.c.o
 
 KOBJS = string/strcmp.c.o string/strlen.c.o string/memset.c.o \
         string/memcpy.c.o string/memcmp.c.o string/strerror.c.o \
         string/strtok.c.o string/strchr.c.o string/strncpy.c.o \
-        bits/baseprintf.c.o string/strcat.c.o
+        bits/baseprintf.c.o string/strcat.c.o string/memchr.c.o
 
 all: libc.a libk.a
 .PHONY: all clean
