@@ -94,13 +94,17 @@ int alloc_fd(struct pcb *pcb) {
 }
 
 void release_fd(struct pcb *pcb, int i) {
-    kassert(pcb->fds[i] != NULL);
-    kassert(pcb->fds[i]->refcnt != 0);
+    struct file *f = pcb->fds[i];
+    kassert(f != NULL);
+    kassert(f->refcnt != 0);
 
-    pcb->fds[i]->refcnt--;
+    f->refcnt--;
 
-    if (pcb->fds[i]->refcnt == 0) {
-        kfree_sync(pcb->fds[i]);
+    if (f->refcnt == 0) {
+        if (f->fops->close != NULL) {
+            f->fops->close(f);
+        }
+        kfree_sync(f);
     }
     pcb->fds[i] = NULL;
 }

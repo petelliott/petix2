@@ -380,7 +380,7 @@ ssize_t sys_exit(size_t code) {
 
     for (size_t i = 0; i < MAX_FDS; ++i) {
         if (pcb->fds[i] != NULL) {
-            sys_close(i);
+            release_fd(pcb, i);
         }
     }
 
