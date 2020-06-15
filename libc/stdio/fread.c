@@ -38,6 +38,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
                     ret = -1;
                     break;
                 } else if (r == 0) {
+                    stream->end = r;
                     break;
                 }
                 stream->end = r;
