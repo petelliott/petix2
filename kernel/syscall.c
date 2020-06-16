@@ -91,15 +91,8 @@ ssize_t sys_close(ssize_t fd) {
         return -EBADF;
     }
 
-    struct file *f = pcb->fds[fd];
-
-    int ret = 0;
-    if (f->fops->close != NULL) {
-        ret = f->fops->close(f);
-    }
-
     release_fd(pcb, fd);
-    return ret;
+    return 0;
 }
 
 ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {

@@ -14,6 +14,8 @@ int main(int argc, char *argv[]) {
     pid_t pid = fork();
     if (pid == 0) {
         // child
+        close(filedes[1]);
+
         char buff[1024];
         int ret;
         while ((ret = read(filedes[0], buff, 4)) > 0) {
@@ -28,6 +30,8 @@ int main(int argc, char *argv[]) {
         close(filedes[0]);
     } else if (pid > 0) {
         // parent
+        close(filedes[0]);
+
         for (size_t i = 0; i < 12; ++i) {
             write(filedes[1], "abc", 3);
         }
