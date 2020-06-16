@@ -22,10 +22,6 @@ static ssize_t pread(struct file *f, char *buf, size_t count) {
 
     ssize_t c = count;
     while (count > 0) {
-        if (!pipe->owrite && pipe->hi == pipe->lo) {
-            return c-count;
-        }
-
         acquire_lock(&(pipe->lock));
         while (pipe->hi != pipe->lo && count > 0) {
             *buf = pipe->buffer[pipe->lo];
@@ -38,7 +34,12 @@ static ssize_t pread(struct file *f, char *buf, size_t count) {
             cond_wake(&(pipe->wcond));
         }
 
-        release_lock(&(pipe->lock));
+        if (!pipe->owrite && pipe->hi == pipe->lo) {
+            release_lock(&(pipe->lock));
+            return c-count;
+        } else {
+            release_lock(&(pipe->lock));
+        }
 
         if (count > 0) {
             cond_wait(&(pipe->rcond));
