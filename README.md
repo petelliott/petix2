@@ -3,6 +3,8 @@
 a small research-unix like operating system for x86-32. it is released
 under the GPL-v3
 
+![petix2 in action](demo.png)
+
 ### build instructions
 
 you will need an `i686-elf` toolchain see [osdev wiki for
