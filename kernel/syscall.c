@@ -11,6 +11,8 @@
 #include "pipe.h"
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
+
 
 syscall_t syscall_table[256] = {
     [SYS_NR_READ]    = sys_read,
@@ -31,11 +33,11 @@ syscall_t syscall_table[256] = {
 ssize_t sys_read(ssize_t fd, char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
         return -EBADF;
     }
 
-    struct file *f = pcb->fds[fd];
+    struct file *f = pcb->fds[fd].file;
 
     if (f->fops->read == NULL) {
         return -EPERM;
@@ -47,11 +49,11 @@ ssize_t sys_read(ssize_t fd, char *buf, size_t count) {
 ssize_t sys_write(ssize_t fd, const char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
         return -EBADF;
     }
 
-    struct file *f = pcb->fds[fd];
+    struct file *f = pcb->fds[fd].file;
 
     if (f->fops->write == NULL) {
         return -EPERM;
@@ -75,7 +77,11 @@ ssize_t sys_open(const char *path, int flags, int mode) {
         return fd;
     }
 
-    err = fs_open(&in, pcb->fds[fd], flags);
+    if (flags & O_CLOEXEC) {
+        pcb->fds[fd].cloexec = true;
+    }
+
+    err = fs_open(&in, pcb->fds[fd].file, flags);
     if (err < 0) {
         release_fd(pcb, fd);
         return err;
@@ -87,7 +93,7 @@ ssize_t sys_open(const char *path, int flags, int mode) {
 ssize_t sys_close(ssize_t fd) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
         return -EBADF;
     }
 
@@ -97,7 +103,7 @@ ssize_t sys_close(ssize_t fd) {
 
 ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
     struct pcb *pcb = get_pcb(get_pid());
-    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
         return -EBADF;
     }
 
@@ -109,23 +115,23 @@ ssize_t sys_dup2(ssize_t fd, ssize_t fd2) {
         return fd;
     }
 
-    if (pcb->fds[fd2] != NULL) {
+    if (pcb->fds[fd2].file != NULL) {
         sys_close(fd2);
     }
 
     dup_fd(pcb, fd);
-    pcb->fds[fd2] = pcb->fds[fd];
+    pcb->fds[fd2].file = pcb->fds[fd].file;
     return fd2;
 }
 
 ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
     struct pcb *pcb = get_pcb(get_pid());
 
-    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd] == NULL) {
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
         return -EBADF;
     }
 
-    struct file *f = pcb->fds[fd];
+    struct file *f = pcb->fds[fd].file;
 
     if (f->inode.ftype != FT_DIR) {
         return -ENOTDIR;
@@ -138,7 +144,7 @@ ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
     return f->fops->getdent(f, dent);
 }
 
-ssize_t sys_pipe(int filedes[2]) {
+ssize_t sys_pipe(int filedes[2], size_t flags) {
     struct pcb *pcb = get_pcb(get_pid());
 
     int fd1 = alloc_fd(pcb);
@@ -151,7 +157,11 @@ ssize_t sys_pipe(int filedes[2]) {
         return fd2;
     }
 
-    open_pipe(pcb->fds[fd1], pcb->fds[fd2]);
+    open_pipe(pcb->fds[fd1].file, pcb->fds[fd2].file);
+    if (flags & O_CLOEXEC) {
+        pcb->fds[fd1].cloexec = true;
+        pcb->fds[fd2].cloexec = true;
+    }
 
     filedes[0] = fd1;
     filedes[1] = fd2;
@@ -215,7 +225,7 @@ ssize_t sys_fork(void) {
     memcpy(new->fds, old->fds, sizeof(new->fds));
 
     for (size_t i = 0; i < MAX_FDS; ++i) {
-        if (new->fds[i] != NULL) {
+        if (new->fds[i].file != NULL) {
             dup_fd(new, i);
         }
     }
@@ -248,6 +258,14 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     // prevent -Wunused-but-set and -Wset-but-unused
     b = b;
 
+    // close O_CLOEXEC fds
+    struct pcb *pcb = get_pcb(get_pid());
+
+    for (size_t i = 0; i < MAX_FDS; ++i) {
+        if (pcb->fds[i].file != NULL && pcb->fds[i].cloexec) {
+            release_fd(pcb, i);
+        }
+    }
 
     if (path == NULL) {
         return -EINVAL;
@@ -372,7 +390,7 @@ ssize_t sys_exit(size_t code) {
     }
 
     for (size_t i = 0; i < MAX_FDS; ++i) {
-        if (pcb->fds[i] != NULL) {
+        if (pcb->fds[i].file != NULL) {
             release_fd(pcb, i);
         }
     }

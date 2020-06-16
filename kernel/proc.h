@@ -30,7 +30,10 @@ struct pcb {
     enum ready_state rs;
     uint8_t return_code;
     pid_t wait_pid;
-    struct file *fds[MAX_FDS];
+    struct {
+        struct file *file;
+        bool cloexec;
+    } fds[MAX_FDS];
 
     //TODO all kinds of other stuff
 };

@@ -84,9 +84,10 @@ struct pcb *alloc_proc(void) {
 
 int alloc_fd(struct pcb *pcb) {
     for (int i = 0; i < MAX_FDS; ++i) {
-        if (pcb->fds[i] == NULL) {
-            pcb->fds[i] = kmalloc_sync(sizeof(struct file));
-            pcb->fds[i]->refcnt = 1;
+        if (pcb->fds[i].file == NULL) {
+            pcb->fds[i].file = kmalloc_sync(sizeof(struct file));
+            pcb->fds[i].file->refcnt = 1;
+            pcb->fds[i].cloexec = false;
             return i;
         }
     }
@@ -94,7 +95,7 @@ int alloc_fd(struct pcb *pcb) {
 }
 
 void release_fd(struct pcb *pcb, int i) {
-    struct file *f = pcb->fds[i];
+    struct file *f = pcb->fds[i].file;
     kassert(f != NULL);
     kassert(f->refcnt != 0);
 
@@ -106,11 +107,12 @@ void release_fd(struct pcb *pcb, int i) {
         }
         kfree_sync(f);
     }
-    pcb->fds[i] = NULL;
+    pcb->fds[i].file = NULL;
+    pcb->fds[i].cloexec = false;
 }
 
 void dup_fd(struct pcb *pcb, int fd) {
-    pcb->fds[fd]->refcnt++;
+    pcb->fds[fd].file->refcnt++;
 }
 
 int proc_get_terminated_child(struct pcb *pcb, pid_t pid) {
