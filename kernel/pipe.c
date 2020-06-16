@@ -119,7 +119,7 @@ void open_pipe(struct file *rfile, struct file *wfile) {
     static struct file_ops fops;
 
     struct pipe *pipe = kmalloc_sync(sizeof(struct pipe));
-    memset(pipe, 0, sizeof(pipe));
+    memset(pipe, 0, sizeof(struct pipe));
 
     pipe->oread = true;
     pipe->owrite = true;
