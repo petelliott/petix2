@@ -234,12 +234,12 @@ static size_t loff   = 0;
 static bool shifted = false;
 static bool ctrld   = false;
 
-// returns 255 if invalid
+// returns -1 if invalid
 static char sc_to_ascii(int scancode) {
     if (ctrld) {
         char ch = en_map[scancode];
         if (ch == 0) {
-            return 255;
+            return -1;
         }
 
         if (ch >= 'a') {
@@ -257,7 +257,7 @@ static char sc_to_ascii(int scancode) {
     }
 
     if (ret == 0) {
-        return 255;
+        return -1;
     }
     return ret;
 }
@@ -278,7 +278,7 @@ static void onkeypress(int scancode) {
         ctrld = false;
     } else if (scancode < 0x80) {
         char ch = sc_to_ascii(scancode);
-        if (ch != 255) {
+        if (ch != -1) {
             if (ch == '\b') {
                 if (loff != lbase) {
                     loff = (((loff - 1)%BUFF_LEN)+BUFF_LEN) % BUFF_LEN;
