@@ -24,6 +24,7 @@ enum errno_ns {
     EINVAL  = 22,
 
     EMFILE  = 24,
+    ENOTTY  = 25,
 
     ENOSYS  = 38,
 };

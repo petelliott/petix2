@@ -15,6 +15,7 @@ enum syscall_nums {
     SYS_NR_DUP2  = 5,
     SYS_NR_GETDENT = 6,
     SYS_NR_PIPE    = 7,
+    SYS_NR_IOCTL   = 8,
     SYS_NR_SCHED_YIELD = 24,
     SYS_NR_FORK     = 57,
     SYS_NR_EXEC     = 59,

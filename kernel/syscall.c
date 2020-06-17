@@ -14,6 +14,10 @@
 #include <fcntl.h>
 
 
+//TODO
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+
 syscall_t syscall_table[256] = {
     [SYS_NR_READ]    = sys_read,
     [SYS_NR_WRITE]   = sys_write,
@@ -22,6 +26,9 @@ syscall_t syscall_table[256] = {
     [SYS_NR_WAITPID] = sys_waitpid,
     [SYS_NR_DUP2]    = sys_dup2,
     [SYS_NR_GETDENT] = sys_getdent,
+
+    [SYS_NR_IOCTL]   = sys_ioctl,
+
     [SYS_NR_PIPE]    = sys_pipe,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK]     = sys_fork,
@@ -29,6 +36,8 @@ syscall_t syscall_table[256] = {
     [SYS_NR_EXIT]     = sys_exit,
     [SYS_NR_DB_PRINT] = sys_db_print
 };
+
+#pragma GCC diagnostic pop
 
 ssize_t sys_read(ssize_t fd, char *buf, size_t count) {
     struct pcb *pcb = get_pcb(get_pid());
@@ -199,6 +208,24 @@ ssize_t sys_waitpid(pid_t pid, int *wstatus, int options) {
     } else {
         return ret;
     }
+}
+
+ssize_t sys_ioctl(ssize_t fd, size_t req, ...) {
+    struct pcb *pcb = get_pcb(get_pid());
+
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
+        return -EBADF;
+    }
+
+    struct file *f = pcb->fds[fd].file;
+
+    if (f->fops->ioctl == NULL) {
+        return -ENOTTY;
+    }
+
+    va_list ap;
+    va_start(ap, req);
+    return f->fops->ioctl(f, req, ap);
 }
 
 ssize_t sys_db_print(const char *str) {

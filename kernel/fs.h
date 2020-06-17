@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include "sync.h"
 
 #define PATH_MAX 4096
@@ -19,6 +20,7 @@ struct file_ops {
     ssize_t (*read)(struct file *, char *, size_t);
     ssize_t (*write)(struct file *, const char *, size_t);
     int (*getdent)(struct file *, struct petix_dirent *);
+    int (*ioctl)(struct file *, unsigned long, va_list);
 
     int (*close)(struct file *);
 };

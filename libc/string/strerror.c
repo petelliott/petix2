@@ -17,6 +17,7 @@ static const char * const errtab[] = {
     [EISDIR] = "Is a directory",
     [EINVAL] = "Invalid argument",
     [EMFILE] = "Too many open files",
+    [ENOTTY] = "Inappropriate ioctl for device",
     [ENOSYS] = "Function not Implemented",
 };
 

@@ -23,6 +23,8 @@ ssize_t sys_pipe(int filedes[2], size_t flags);
 
 ssize_t sys_waitpid(pid_t pid, int *wstatus, int options);
 
+ssize_t sys_ioctl(ssize_t fd, size_t req, ...);
+
 ssize_t sys_sched_yield(void);
 ssize_t sys_fork(void);
 ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]);
