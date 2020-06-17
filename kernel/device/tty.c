@@ -8,6 +8,7 @@
 #include "../kdebug.h"
 #include "../sync.h"
 #include "../device.h"
+#include "tty/ansiseq.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -43,8 +44,39 @@ static inline void outb(unsigned int port, unsigned char value) {
    asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
 }
 
-static void term_curto(size_t r, size_t c) {
-    uint16_t pos = r * VGA_WIDTH + c;
+
+static struct vga_entry *term_buff = (struct vga_entry *) 0xB8000;
+
+static enum vga_color ansi_to_vga[] = {
+    [ANSI_BLACK]   = VGA_COLOR_BLACK,
+    [ANSI_RED]     = VGA_COLOR_RED,
+    [ANSI_GREEN]   = VGA_COLOR_GREEN,
+    [ANSI_YELLOW]  = VGA_COLOR_BROWN,
+    [ANSI_BLUE]    = VGA_COLOR_BLUE,
+    [ANSI_MAGENTA] = VGA_COLOR_MAGENTA,
+    [ANSI_CYAN]    = VGA_COLOR_CYAN,
+    [ANSI_WHITE]   = VGA_COLOR_LIGHT_GREY,
+};
+
+static void t_putch(const struct ansi_rendition *r, char ch, int row, int col) {
+    struct vga_entry *entry = &(term_buff[row*VGA_WIDTH+col]);
+    entry->ch = ch;
+
+    if (r->fg == ANSI_DEFAULT) {
+        entry->fg = VGA_COLOR_LIGHT_GREY;
+    } else {
+        entry->fg = ansi_to_vga[r->fg];
+    }
+
+    if (r->bg == ANSI_DEFAULT) {
+        entry->bg = VGA_COLOR_BLACK;
+    } else {
+        entry->bg = ansi_to_vga[r->bg];
+    }
+}
+
+static void t_curto(int row, int col) {
+    uint16_t pos = row * VGA_WIDTH + col;
 
 	outb(0x3D4, 0x0F);
 	outb(0x3D5, (uint8_t) (pos & 0xFF));
@@ -52,21 +84,32 @@ static void term_curto(size_t r, size_t c) {
 	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
 }
 
-static struct vga_entry *term_buff = (struct vga_entry *) 0xB8000;
-
-static void term_clear(void) {
-	for (size_t y = 0; y < VGA_HEIGHT; y++) {
+static void t_scroll_up(void) {
+	for (size_t y = 0; y < VGA_HEIGHT - 1; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
-			term_buff[index].ch = ' ';
-			term_buff[index].bg = VGA_COLOR_BLACK;
-		}
-	}
+            term_buff[y*VGA_WIDTH + x] = term_buff[(y+1)*VGA_WIDTH + x];
+        }
+    }
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+        const size_t index = (VGA_HEIGHT-1) * VGA_WIDTH + x;
+        term_buff[index].ch = ' ';
+        term_buff[index].bg = VGA_COLOR_BLACK;
+    }
 }
 
+
+static struct ansi_term aterm = {
+    .backend = {
+        .putch = t_putch,
+        .curto = t_curto,
+        .scroll_up = t_scroll_up,
+        .row_n = VGA_HEIGHT,
+        .col_n = VGA_WIDTH
+    },
+
+};
+
 // device stuff
-static struct file_ops fops;
-static petix_lock_t tty_lock;
 
 
 static int dev_open(struct inode *in, struct file *file, int flags) {
@@ -80,87 +123,30 @@ static ssize_t dev_write(struct file *f, const char *buf, size_t count) {
 
 static ssize_t dev_read(struct file *f, char *buf, size_t count);
 
-static void onkeypress(int scancode);
+static struct file_ops fops = {
+    .open  = dev_open,
+    .write = dev_write,
+    .read  = dev_read,
+};
+static petix_lock_t tty_lock;
 
-static size_t row, col;
-static enum vga_color fg;
-static enum vga_color bg;
+static void onkeypress(int scancode);
 
 void tty_init(void) {
     acquire_lock(&tty_lock);
-    term_clear();
-    row = col = 0;
-    term_curto(row, col);
-    fg = VGA_COLOR_LIGHT_GREY;
-    bg = VGA_COLOR_BLACK;
-
-    memset(&fops, 0, sizeof(fops));
-    fops = (struct file_ops) {
-        .open  = dev_open,
-        .write = dev_write,
-        .read  = dev_read,
-    };
+    ansi_init(&aterm);
 
     register_device(DEV_TTY, &fops);
     register_keypress(onkeypress);
     release_lock(&tty_lock);
 }
 
-static void scroll_up(void) {
-	for (size_t y = 0; y < VGA_HEIGHT - 1; y++) {
-		for (size_t x = 0; x < VGA_WIDTH; x++) {
-            term_buff[y*VGA_WIDTH + x] = term_buff[(y+1)*VGA_WIDTH + x];
-        }
-    }
-    for (size_t x = 0; x < VGA_WIDTH; x++) {
-        const size_t index = (VGA_HEIGHT-1) * VGA_WIDTH + x;
-        term_buff[index].ch = ' ';
-        term_buff[index].bg = VGA_COLOR_BLACK;
-    }
-    row--;
-}
-
-
-// output functions
-static void term_putchar(char c) {
-    if (c == '\n') {
-        ++row;
-        col = 0;
-    } else if (c == '\r') {
-        col = 0;
-    } else if (c == '\t') {
-        col += 8;
-    } else if (c == '\b') {
-        if (--col == -1) {
-            col = VGA_WIDTH;
-            --row;
-        }
-        struct vga_entry *entry = &(term_buff[row*VGA_WIDTH+col]);
-        entry->ch = ' ';
-    } else if (c == '\e') {
-        //TODO: escape sequences
-    } else {
-        struct vga_entry *entry = &(term_buff[row*VGA_WIDTH+col]);
-        entry->ch = c;
-        entry->fg = fg;
-        entry->bg = bg;
-        if (++col == VGA_WIDTH) {
-            col = 0;
-            ++row;
-        }
-    }
-    if (row == VGA_HEIGHT) {
-        scroll_up();
-    }
-}
-
 ssize_t tty_write(const void *buf, size_t count) {
     acquire_lock(&tty_lock);
 
     for (size_t i = 0; i < count; ++i) {
-        term_putchar(((const char *)buf)[i]);
+        ansi_putch(&aterm, ((const char *)buf)[i]);
     }
-    term_curto(row, col);
     release_lock(&tty_lock);
 
     return count;

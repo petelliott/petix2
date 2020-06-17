@@ -1,6 +1,6 @@
 include ../../obj.mk
 
-OBJS = pipe cloexec
+OBJS = pipe cloexec ansi
 
 PROGS = $(patsubst %, $(ROOT)/bin/test/%, $(OBJS))
 
