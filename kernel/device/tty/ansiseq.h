@@ -2,6 +2,7 @@
 #define DEVICE_TTY_ANSISEQ_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 enum ansi_color {
     ANSI_BLACK   = 0,
@@ -18,11 +19,19 @@ enum ansi_color {
 
 struct ansi_rendition {
     enum ansi_color fg, bg;
-    bool bold : 1;
-    bool faint : 1;
-    bool italics : 1;
-    bool underline : 1;
-    bool blink : 1;
+    union {
+        struct {
+            bool na_1      : 1;
+            bool bold      : 1;
+            bool faint     : 1;
+            bool italics   : 1;
+            bool underline : 1;
+            bool blink     : 1;
+            bool na_2      : 1;
+            bool negative  : 1;
+        } f;
+        uint8_t bits;
+    } flags;
 };
 
 struct ansi_backend {

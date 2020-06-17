@@ -31,9 +31,11 @@ enum vga_color {
 };
 
 struct vga_entry {
-    uint16_t ch : 8;
-    uint16_t fg : 4;
-    uint16_t bg : 4;
+    uint16_t ch    : 8;
+    uint16_t fg    : 3;
+    uint16_t bold  : 1;
+    uint16_t bg    : 3;
+    uint16_t blink : 1;
 };
 
 
@@ -42,6 +44,25 @@ static const size_t VGA_HEIGHT = 25;
 
 static inline void outb(unsigned int port, unsigned char value) {
    asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
+}
+
+static inline uint8_t inb(uint16_t port) {
+    uint8_t ret;
+    asm volatile ( "inb %1, %0"
+                   : "=a"(ret)
+                   : "Nd"(port) );
+    return ret;
+}
+
+static void enable_blink(void) {
+
+    //reset r/w flip-flop
+    inb(0x3DA);
+
+    outb(0x3C0, 0x30);
+    uint8_t attr = inb(0x3C1);
+    attr |= (1<<3);
+    outb(0x3C0, attr);
 }
 
 
@@ -73,6 +94,17 @@ static void t_putch(const struct ansi_rendition *r, char ch, int row, int col) {
     } else {
         entry->bg = ansi_to_vga[r->bg];
     }
+
+    entry->bold = r->flags.f.bold;
+
+    //TODO figure out blinking
+    //entry->blink = r->flags.f.blink;
+
+    if (r->flags.f.negative) {
+        int tmp = entry->bg;
+        entry->bg = entry->fg;
+        entry->fg = tmp;
+    }
 }
 
 static void t_curto(int row, int col) {
@@ -94,6 +126,7 @@ static void t_scroll_up(void) {
         const size_t index = (VGA_HEIGHT-1) * VGA_WIDTH + x;
         term_buff[index].ch = ' ';
         term_buff[index].bg = VGA_COLOR_BLACK;
+        term_buff[index].fg = VGA_COLOR_LIGHT_GREY;
     }
 }
 
@@ -134,6 +167,7 @@ static void onkeypress(int scancode);
 
 void tty_init(void) {
     acquire_lock(&tty_lock);
+    enable_blink();
     ansi_init(&aterm);
 
     register_device(DEV_TTY, &fops);

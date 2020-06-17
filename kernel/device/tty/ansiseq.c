@@ -61,10 +61,18 @@ static void process_rendition_command(struct ansi_term *term, int nargs) {
         } else if (cmd/10 == 4) {
             term->rendition.bg = cmd % 10;
         } else if (cmd == 0) {
-            memset(&term->rendition, 0, sizeof(term->rendition));
-
+            term->rendition.flags.bits = 0;
             term->rendition.fg = ANSI_DEFAULT;
             term->rendition.bg = ANSI_DEFAULT;
+        } else if (cmd/10 == 0) {
+            term->rendition.flags.bits |= (1 << (cmd %10));
+        } else if (cmd/10 == 2) {
+            if (cmd % 10 == 2) {
+                term->rendition.flags.f.bold = false;
+                term->rendition.flags.f.faint = false;
+            } else {
+                term->rendition.flags.bits &= ~(1 << (cmd %10));
+            }
         }
     }
 }
