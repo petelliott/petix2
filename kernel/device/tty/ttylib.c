@@ -1,6 +1,8 @@
 #include "ttylib.h"
 #include <string.h>
 
+#define SEND_CHAR -1
+
 void petix_tty_init(struct petix_tty *tty, const struct ansi_backend *out) {
     memset(tty, 0, sizeof(struct petix_tty));
 
@@ -47,12 +49,9 @@ ssize_t petix_tty_read(struct petix_tty *tty, char *buf, size_t count) {
         release_global();
 
         //eot
-        if (*(buf-1) == 0x04) {
+        if (buf[-1] == SEND_CHAR) {
             release_lock(&tty->read_lock);
             return (c-count) - 1;
-        } else if (*(buf-1) == '\n') {
-            release_lock(&tty->read_lock);
-            return (c-count);
         }
 
         if (count > 0) {
@@ -60,7 +59,7 @@ ssize_t petix_tty_read(struct petix_tty *tty, char *buf, size_t count) {
         }
     }
 
-    if (tty->buffer[tty->fbase] == 0x04) {
+    if (tty->buffer[tty->fbase] == SEND_CHAR) {
         tty->fbase = (tty->fbase + 1) % TTY_BUFF_LEN;
     }
 
@@ -108,19 +107,24 @@ void petix_tty_input_seq(struct petix_tty *tty, const char *seq, size_t n) {
         }
     } else {
 
-        for (size_t i = 0; i < n; ++i) {
-            tty->buffer[tty->loff] = seq[i];
-            tty->loff = (tty->loff+1) % TTY_BUFF_LEN;
-        }
-
         if (seq[0] != 0x04) {
+
+            for (size_t i = 0; i < n; ++i) {
+                tty->buffer[tty->loff] = seq[i];
+                tty->loff = (tty->loff+1) % TTY_BUFF_LEN;
+            }
+
             for (size_t i = 0; i < n; ++i) {
                 const char *esc = echo_map[(uint8_t)seq[i]];
                 petix_tty_write(tty, esc, strlen(esc));
             }
         }
 
+
         if (seq[0] == '\n' || seq[0] == 0x04) {
+            tty->buffer[tty->loff] = SEND_CHAR;
+            tty->loff = (tty->loff+1) % TTY_BUFF_LEN;
+
             tty->lbase = tty->loff;
             cond_wake(&tty->read_sem);
         }
