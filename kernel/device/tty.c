@@ -9,6 +9,7 @@
 #include "../sync.h"
 #include "../device.h"
 #include "tty/ansiseq.h"
+#include "tty/ttylib.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -130,17 +131,15 @@ static void t_scroll_up(void) {
     }
 }
 
-
-static struct ansi_term aterm = {
-    .backend = {
-        .putch = t_putch,
-        .curto = t_curto,
-        .scroll_up = t_scroll_up,
-        .row_n = VGA_HEIGHT,
-        .col_n = VGA_WIDTH
-    },
-
+static struct ansi_backend backend = {
+    .putch = t_putch,
+    .curto = t_curto,
+    .scroll_up = t_scroll_up,
+    .row_n = VGA_HEIGHT,
+    .col_n = VGA_WIDTH
 };
+
+static struct petix_tty tty;
 
 // device stuff
 
@@ -154,56 +153,32 @@ static ssize_t dev_write(struct file *f, const char *buf, size_t count) {
     return tty_write(buf, count);
 }
 
-static ssize_t dev_read(struct file *f, char *buf, size_t count);
+static ssize_t dev_read(struct file *f, char *buf, size_t count) {
+    return petix_tty_read(&tty, buf, count);
+}
 
 static struct file_ops fops = {
     .open  = dev_open,
     .write = dev_write,
     .read  = dev_read,
 };
-static petix_lock_t tty_lock;
 
 static void onkeypress(int scancode);
 
 void tty_init(void) {
-    acquire_lock(&tty_lock);
     enable_blink();
-    ansi_init(&aterm);
+    petix_tty_init(&tty, &backend);
 
     register_device(DEV_TTY, &fops);
     register_keypress(onkeypress);
-    release_lock(&tty_lock);
 }
 
 ssize_t tty_write(const void *buf, size_t count) {
-    acquire_lock(&tty_lock);
-
-    for (size_t i = 0; i < count; ++i) {
-        ansi_putch(&aterm, ((const char *)buf)[i]);
-    }
-    release_lock(&tty_lock);
-
-    return count;
+    return petix_tty_write(&tty, buf, count);
 }
-
 
 // input functions
 
-
-//converts from ascii to caret notation
-static const char *const echo_map[128] = {
-    "^@", "^A", "^B", "^C", "^D", "^E", "^F", "^G", "\b", "        ",
-    "\n", "^K", "^L", "^M", "^N", "^O", "^P", "^Q", "^R", "^S", "^T",
-    "^U", "^V", "^W", "^X", "^Y", "^Z", "^[", "^\\", "^]", "^^", "^_",
-    " ", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",",
-    "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-    ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F",
-    "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-    "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_", "`",
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-    "{", "|", "}", "~", "^?"
-};
 
 // stolen from serenityos
 static const char en_map[0x80] = {
@@ -224,12 +199,6 @@ static const char en_shift_map[0x80] = {
     0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, '|', 0, 0, 0,
 };
 
-#define BUFF_LEN 2048
-
-static char filebuff[BUFF_LEN]; // probably make this grow
-static size_t fbase = 0;
-static size_t lbase  = 0;
-static size_t loff   = 0;
 
 static bool shifted = false;
 static bool ctrld   = false;
@@ -262,9 +231,6 @@ static char sc_to_ascii(int scancode) {
     return ret;
 }
 
-petix_lock_t read_lock;
-petix_sem_t  read_sem;
-
 // interrupt handler
 static void onkeypress(int scancode) {
     acquire_global();
@@ -279,86 +245,8 @@ static void onkeypress(int scancode) {
     } else if (scancode < 0x80) {
         char ch = sc_to_ascii(scancode);
         if (ch != -1) {
-            if (ch == '\b') {
-                if (loff != lbase) {
-                    loff = (((loff - 1)%BUFF_LEN)+BUFF_LEN) % BUFF_LEN;
-                    tty_write("\b\b\b\b\b\b\b\b\b",
-                              strlen(echo_map[(uint8_t)filebuff[loff]]));
-                }
-            } else {
-
-                filebuff[loff] = ch;
-                loff = (loff+1) % BUFF_LEN;
-
-                if (ch != 0x04) {
-                    const char *seq = echo_map[(uint8_t)ch];
-                    tty_write(seq, strlen(seq));
-                }
-
-                if (ch == '\n' || ch == 0x04) {
-                    lbase = loff;
-                    cond_wake(&read_sem);
-                }
-            }
+            petix_tty_input_seq(&tty, &ch, 1);
         }
     }
     release_global();
-}
-
-#define MIN(a, b) ((a < b)? a:b)
-
-static ssize_t dev_read(struct file *f, char *buf, size_t count) {
-    acquire_lock(&read_lock);
-
-    ssize_t c = count;
-    while (count > 0) {
-        acquire_global();
-        if (lbase > fbase) {
-            size_t start = fbase;
-            size_t len = MIN(lbase-fbase, count);
-            fbase += len;
-
-            memcpy(buf, filebuff+start, len);
-            count -= len;
-            buf += len;
-
-        } else if (lbase < fbase) {
-            size_t start1 = fbase;
-            size_t len1 = MIN(BUFF_LEN - fbase, count);
-            fbase += len1;
-            fbase %= BUFF_LEN;
-            count -= len1;
-
-            size_t start2 = 0;
-            size_t len2 = MIN(lbase - 0, count);
-            fbase += len2;
-            fbase %= BUFF_LEN;
-            count -= len2;
-
-            memcpy(buf, filebuff+start1, len1);
-            memcpy(buf+len1, filebuff+start2, len2);
-            buf += len1+len2;
-        }
-        release_global();
-
-        //eot
-        if (*(buf-1) == 0x04) {
-            release_lock(&read_lock);
-            return (c-count) - 1;
-        } else if (*(buf-1) == '\n') {
-            release_lock(&read_lock);
-            return (c-count);
-        }
-
-        if (count > 0) {
-            cond_wait(&read_sem);
-        }
-    }
-
-    if (filebuff[fbase] == 0x04) {
-        fbase = (fbase + 1) % BUFF_LEN;
-    }
-
-    release_lock(&read_lock);
-    return c;
 }

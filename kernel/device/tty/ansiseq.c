@@ -4,16 +4,16 @@
 
 
 static void clear(struct ansi_term *term) {
-    for (int r = 0; r < term->backend.row_n; ++r) {
-        for (int c = 0; c < term->backend.col_n; ++c) {
-            term->backend.putch(&(term->rendition), ' ', r, c);
+    for (int r = 0; r < term->backend->row_n; ++r) {
+        for (int c = 0; c < term->backend->col_n; ++c) {
+            term->backend->putch(&(term->rendition), ' ', r, c);
         }
     }
 }
 
 
 void ansi_init(struct ansi_term *term) {
-    struct ansi_backend b = term->backend;
+    const struct ansi_backend *b = term->backend;
     memset(term, 0, sizeof(term));
     term->backend = b;
 
@@ -35,22 +35,22 @@ static void putch_unesc(struct ansi_term *term, char ch) {
         term->col += 8;
     } else if (ch == '\b') {
         if (--term->col == -1) {
-            term->col = term->backend.col_n - 1;
+            term->col = term->backend->col_n - 1;
             --term->row;
         }
-        term->backend.putch(&(term->rendition), ' ', term->row, term->col);
+        term->backend->putch(&(term->rendition), ' ', term->row, term->col);
     } else {
-        term->backend.putch(&(term->rendition), ch, term->row, term->col);
-        if (++term->col == term->backend.col_n) {
+        term->backend->putch(&(term->rendition), ch, term->row, term->col);
+        if (++term->col == term->backend->col_n) {
             term->col = 0;
             ++term->row;
         }
     }
-    if (term->row == term->backend.row_n) {
-        term->backend.scroll_up();
+    if (term->row == term->backend->row_n) {
+        term->backend->scroll_up();
         term->row--;
     }
-    term->backend.curto(term->row, term->col);
+    term->backend->curto(term->row, term->col);
 }
 
 static void process_rendition_command(struct ansi_term *term, int nargs) {
