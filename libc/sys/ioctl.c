@@ -11,8 +11,6 @@ int ioctl(int fd, unsigned long request, ...) {
     size_t a = va_arg(v, size_t);
     size_t b = va_arg(v, size_t);
     size_t c = va_arg(v, size_t);
-    size_t d = va_arg(v, size_t);
-    size_t e = va_arg(v, size_t);
 
-    return raw_syscall_errno(SYS_NR_IOCTL, a, b, c, d, e);
+    return raw_syscall_errno(SYS_NR_IOCTL, fd, request, a, b, c);
 }

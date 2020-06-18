@@ -1,5 +1,7 @@
 #include "ttylib.h"
 #include <string.h>
+#include <sys/ioctl.h>
+#include <errno.h>
 
 #define SEND_CHAR -1
 
@@ -9,7 +11,7 @@ void petix_tty_init(struct petix_tty *tty, const struct ansi_backend *out) {
     tty->output.backend = out;
     ansi_init(&(tty->output));
 
-    tty->termios.c_cflag = ICANON | ECHO | ISIG;
+    tty->termios.c_lflag = ICANON | ECHO | ISIG;
 }
 
 #define MIN(a, b) ((a < b)? a:b)
@@ -107,26 +109,53 @@ void petix_tty_input_seq(struct petix_tty *tty, const char *seq, size_t n) {
         }
     } else {
 
-        if (seq[0] != 0x04) {
+        if (seq[0] != 0x04 || !(tty->termios.c_lflag & ICANON)) {
 
             for (size_t i = 0; i < n; ++i) {
                 tty->buffer[tty->loff] = seq[i];
                 tty->loff = (tty->loff+1) % TTY_BUFF_LEN;
             }
 
-            for (size_t i = 0; i < n; ++i) {
-                const char *esc = echo_map[(uint8_t)seq[i]];
-                petix_tty_write(tty, esc, strlen(esc));
+            if (tty->termios.c_lflag & ECHO) {
+                for (size_t i = 0; i < n; ++i) {
+                    const char *esc = echo_map[(uint8_t)seq[i]];
+                    petix_tty_write(tty, esc, strlen(esc));
+                }
             }
         }
 
 
-        if (seq[0] == '\n' || seq[0] == 0x04) {
+        if (seq[0] == '\n' || seq[0] == 0x04
+            || !(tty->termios.c_lflag & ICANON)) {
+
             tty->buffer[tty->loff] = SEND_CHAR;
             tty->loff = (tty->loff+1) % TTY_BUFF_LEN;
 
             tty->lbase = tty->loff;
             cond_wake(&tty->read_sem);
         }
+    }
+}
+
+ssize_t petix_tty_ioctl(struct petix_tty *tty, size_t req, va_list ap) {
+    if (req == TCGETS) {
+        struct termios *termios_p = va_arg(ap, void *);
+        *termios_p = tty->termios;
+        return 0;
+    } else if (req == TCSETS || req == TCSETSW) {
+        struct termios *termios_p = va_arg(ap, void *);
+        acquire_lock(&tty->read_lock);
+        tty->termios = *termios_p;
+        release_lock(&tty->read_lock);
+        return 0;
+    } else if (req == TCSETSF) {
+        acquire_lock(&tty->read_lock);
+        struct termios *termios_p = va_arg(ap, void *);
+        tty->fbase = tty->lbase = tty->loff;
+        tty->termios = *termios_p;
+        release_lock(&tty->read_lock);
+        return 0;
+    } else {
+        return -ENOTTY;
     }
 }

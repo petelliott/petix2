@@ -4,6 +4,8 @@
 enum ioctl_values {
     TCGETS,
     TCSETS,
+    TCSETSW,
+    TCSETSF,
 };
 
 int ioctl(int fd, unsigned long request, ...);

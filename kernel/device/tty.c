@@ -157,10 +157,15 @@ static ssize_t dev_read(struct file *f, char *buf, size_t count) {
     return petix_tty_read(&tty, buf, count);
 }
 
+static int dev_ioctl(struct file *f, unsigned long req, va_list ap) {
+    return petix_tty_ioctl(&tty, req, ap);
+}
+
 static struct file_ops fops = {
     .open  = dev_open,
     .write = dev_write,
     .read  = dev_read,
+    .ioctl = dev_ioctl,
 };
 
 static void onkeypress(int scancode);

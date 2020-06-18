@@ -29,15 +29,23 @@ enum c_oflag_flags {
 };
 
 enum c_cflag_flags {
-    ICANON,
-    ECHO,
-    ISIG,
+    TODO_c,
+};
+
+enum c_lflag_flags {
+    ICANON = (1 << 0),
+    ECHO   = (1 << 1),
+    ISIG   = (1 << 2),
 };
 
 enum c_cc_chars {
     TODO_cc,
 };
 
+int tcgetattr(int fd, struct termios *termios_p);
+
+int tcsetattr(int fd, int optional_actions,
+              const struct termios *termios_p);
 
 
 #endif

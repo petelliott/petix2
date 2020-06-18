@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include "../../sync.h"
 #include "ansiseq.h"
+#include <stdarg.h>
 
 #define TTY_BUFF_LEN 2048
 
@@ -23,5 +24,7 @@ ssize_t petix_tty_read(struct petix_tty *tty, char *buf, size_t count);
 ssize_t petix_tty_write(struct petix_tty *tty, const char *buf, size_t count);
 
 void petix_tty_input_seq(struct petix_tty *tty, const char *seq, size_t n);
+
+ssize_t petix_tty_ioctl(struct petix_tty *tty, size_t req, va_list ap);
 
 #endif
