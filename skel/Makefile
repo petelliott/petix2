@@ -1,4 +1,4 @@
-CONFS=boot/grub/grub.cfg etc dev
+CONFS=boot/grub/grub.cfg etc dev COPYING
 
 ROOTCONFS=$(addprefix $(ROOT)/,$(CONFS))
 
