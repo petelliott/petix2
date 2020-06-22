@@ -1,15 +1,15 @@
-#include "tty.h"
+#include "vgatty.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include "../arch/cpu.h"
-#include "../kdebug.h"
-#include "../sync.h"
-#include "../device.h"
-#include "tty/ansiseq.h"
-#include "tty/ttylib.h"
+#include "../../../arch/cpu.h"
+#include "../../../kdebug.h"
+#include "../../../sync.h"
+#include "../../../device.h"
+#include "../ansiseq.h"
+#include "../ttylib.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -174,7 +174,7 @@ void tty_init(void) {
     enable_blink();
     petix_tty_init(&tty, &backend);
 
-    register_device(DEV_TTY, &fops);
+    register_device(DEV_VGATTY, &fops);
     register_keypress(onkeypress);
 }
 

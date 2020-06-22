@@ -1,5 +1,5 @@
-#ifndef TTY_H
-#define TTY_H
+#ifndef VGATTY_H
+#define VGATTY_H
 
 #include <stddef.h>
 #include <sys/types.h>

@@ -28,7 +28,7 @@ static int getdent(struct file *f, struct petix_dirent *d) {
     if (f->offset == 0) {
         d->inode_id = 0;
         d->present = true;
-        strncpy(d->name, "tty", sizeof(d->name));
+        strncpy(d->name, "vgatty", sizeof(d->name));
     } else {
         d->present = false;
     }
@@ -42,8 +42,8 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
     in->fs = fs;
     in->inode_id = ID_OTHER;
 
-    if (strcmp(path, "tty") == 0) {
-        in->dev = MKDEV(DEV_TTY, 0);
+    if (strcmp(path, "vgatty") == 0) {
+        in->dev = MKDEV(DEV_VGATTY, 0);
     } else {
         return -ENOENT;
     }

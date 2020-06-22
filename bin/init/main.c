@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     //TODO: read /etc/ttys
     pid_t getty_pid = fork();
     if (getty_pid == 0) {
-        char *const gettyargv[] = {"/bin/getty", "/dev/tty", NULL};
+        char *const gettyargv[] = {"/bin/getty", "/dev/vgatty", NULL};
         execve("/bin/getty", gettyargv, NULL);
     } else {
         int wstatus;

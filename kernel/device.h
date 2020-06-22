@@ -5,7 +5,7 @@
 
 enum device_majors {
     DEV_INITRD = 0,
-    DEV_TTY = 1,
+    DEV_VGATTY = 1,
     DEV_RANDOM = 2,
 };
 

@@ -1,4 +1,4 @@
-#include "device/tty.h"
+#include "device/tty/ttys/vgatty.h"
 #include "multiboot.h"
 #include "tar.h"
 #include "kdebug.h"
