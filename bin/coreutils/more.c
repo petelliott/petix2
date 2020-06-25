@@ -1,14 +1,20 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 
 static struct termios save;
+static struct winsize wsize;
 
 static void enable_raw(void) {
     // we use stdout as the terminal, because stdin can be piped to
     if (tcgetattr(STDOUT_FILENO, &save) == -1) {
         perror("tcgetattr(3)");
+    }
+
+    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsize) == -1) {
+        perror("ioctl(2)");
     }
 
     struct termios raw = save;
@@ -42,8 +48,7 @@ int main(int argc, char *argv[]) {
 
     char buff[1024];
 
-    //TODO get terminal height better
-    for (size_t i = 0; i < 24; ++i) {
+    for (size_t i = 0; i < wsize.ws_row - 1; ++i) {
         fgets(buff, sizeof(buff), in);
         if (feof(in)) {
             break;
@@ -59,9 +64,15 @@ int main(int argc, char *argv[]) {
         fputs("\r        \r", stdout); // overwrite "--MORE--"
         fflush(stdout);
 
-        if (ch == '\n' || ch == ' ') {
+        if (ch == '\n') {
             fgets(buff, sizeof(buff), in);
             fputs(buff, stdout);
+        } else if (ch == ' ') {
+            for (size_t i = 0; i < wsize.ws_row-1; ++i) {
+                //TODO no reason to write
+                fgets(buff, sizeof(buff), in);
+                fputs(buff, stdout);
+            }
         } else if (ch == 'q' || ch == 0x03) {
             break;
         }

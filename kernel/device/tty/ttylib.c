@@ -155,6 +155,11 @@ ssize_t petix_tty_ioctl(struct petix_tty *tty, size_t req, va_list ap) {
         tty->termios = *termios_p;
         release_lock(&tty->read_lock);
         return 0;
+    } else if (req == TIOCGWINSZ) {
+        struct winsize *wsize = va_arg(ap, void *);
+        wsize->ws_row = tty->output.backend->row_n;
+        wsize->ws_col = tty->output.backend->col_n;
+        return 0;
     } else {
         return -ENOTTY;
     }

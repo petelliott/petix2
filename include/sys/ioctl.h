@@ -6,7 +6,18 @@ enum ioctl_values {
     TCSETS,
     TCSETSW,
     TCSETSF,
+
+    TIOCGWINSZ,
+    TIOCSWINSZ,
 };
+
+struct winsize {
+    unsigned short ws_row;
+    unsigned short ws_col;
+    unsigned short ws_xpixel;   /* unused */
+    unsigned short ws_ypixel;   /* unused */
+};
+
 
 int ioctl(int fd, unsigned long request, ...);
 
