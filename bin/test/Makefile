@@ -1,6 +1,6 @@
 include ../../obj.mk
 
-OBJS = pipe cloexec ansi termios
+OBJS = pipe cloexec ansi termios getopt
 
 PROGS = $(patsubst %, $(ROOT)/bin/test/%, $(OBJS))
 

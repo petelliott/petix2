@@ -30,4 +30,10 @@ int pipe2(int filedes[2], int flags);
 
 void _exit(int status);
 
+int getopt(int argc, char * argv[], const char *optstring);
+
+extern char *optarg;
+extern int optind, opterr, optopt;
+
+
 #endif
