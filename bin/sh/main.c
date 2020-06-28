@@ -36,10 +36,10 @@ pid_t do_prog(char *prog, int in, int out) {
     return exec_prog(args, in, out);
 }
 
-void do_line(char *line) {
+int do_line(char *line) {
     for (; *line == ' ' || *line == '\t' || *line == '\n'; ++line) {}
     if (*line == '#' || *line == '\0') {
-        return;
+        return 0;
     }
 
     char *save;
@@ -55,7 +55,7 @@ void do_line(char *line) {
         pid_t pid = do_prog(prev, infd, filedes[1]);
         if (pid == -1) {
             perror("fork(2)");
-            return;
+            return 1;
         }
 
         if (infd != STDIN_FILENO) {
@@ -71,29 +71,37 @@ void do_line(char *line) {
     pid_t pid = do_prog(prev, infd, STDOUT_FILENO);
     if (pid == -1) {
         perror("fork(2)");
-        return;
+        return 1;
     }
 
     int wstatus;
     waitpid(pid, &wstatus, 0);
+    return wstatus;
 }
 
 int main(int argc, char *argv[]) {
     bool prompt;
     FILE *f;
 
-    if (argc == 1) {
+    int opt;
+    while ((opt = getopt(argc, argv, "c:")) != -1) {
+        if (opt == 'c') {
+            return do_line(optarg);
+        }
+    }
+
+    if (argc-optind == 0) {
         prompt = true;
         f = stdin;
-    } else if (argc == 2) {
+    } else if (argc-optind == 1) {
         prompt = false;
-        f = fopen(argv[1], "r");
+        f = fopen(argv[optind], "r");
         if (f == NULL) {
             perror("fopen(3)");
             return 1;
         }
     } else {
-        fprintf(stderr, "usage: %s [script]\n", argv[0]);
+        fprintf(stderr, "usage: %s [-c] [script]\n", argv[0]);
         return 1;
     }
 

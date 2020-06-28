@@ -20,7 +20,10 @@ int getopt(int argc, char *argv[], const char *optstring) {
         // permute next option into optind slot
         for (next = optind; next < argc && argv[next][0] != '-'; ++next) {}
 
-        if (next >= argc || argv[next][1] == '-') {
+        if (next >= argc) {
+            return -1;
+        }
+        if (argv[next][1] == '-') {
             optind++;
             return -1;
         }
