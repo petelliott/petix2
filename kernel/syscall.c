@@ -372,6 +372,7 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         sp -= len;
         memcpy((void *)sp, tmp_argv[i], len);
         kfree(tmp_argv[i]);
+        tmp_argv[i] = (char *)sp;
     }
 
     sp -= sizeof(char *);
