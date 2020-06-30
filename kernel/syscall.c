@@ -350,7 +350,6 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         return -ENOEXEC;
     }
 
-
     // push args;
     size_t argc = 0;
     if (argv != NULL) {
@@ -362,12 +361,17 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     size_t argv_size = argc*sizeof(char *);
     char **tmp_argv = kmalloc_sync(argv_size);
 
-
     for (size_t i = 0; i < argc; ++i) {
         size_t len = strlen(argv[i]) + 1;
+        tmp_argv[i] = kmalloc(len);
+        memcpy(tmp_argv[i], argv[i], len);
+    }
+
+    for (size_t i = 0; i < argc; ++i) {
+        size_t len = strlen(tmp_argv[i]) + 1;
         sp -= len;
-        memcpy((void *)sp, argv[i], len);
-        tmp_argv[i] = (char *)sp;
+        memcpy((void *)sp, tmp_argv[i], len);
+        kfree(tmp_argv[i]);
     }
 
     sp -= sizeof(char *);
