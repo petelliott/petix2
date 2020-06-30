@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 
 int main(int argc, char *argv[]) {
 
@@ -17,15 +19,28 @@ int main(int argc, char *argv[]) {
 
     system("/etc/rc");
 
-    //TODO: read /etc/ttys
-    pid_t getty_pid = fork();
-    if (getty_pid == 0) {
-        char *const gettyargv[] = {"/bin/getty", "/dev/vgatty", NULL};
-        execve("/bin/getty", gettyargv, NULL);
-    } else {
-        int wstatus;
-        waitpid(getty_pid, &wstatus, 0);
+    FILE *ttys = fopen("/etc/ttys", "r");
+
+    char buff[1024];
+    while (!feof(ttys)) {
+        fgets(buff, sizeof(buff), ttys);
+        if (feof(ttys)) {
+            break;
+        }
+        char *path = strtok(buff, " \n\t\r");
+
+        pid_t getty_pid = fork();
+        if (getty_pid == 0) {
+            fclose(ttys);
+            char *const gettyargv[] = {"/bin/getty", path, NULL};
+            execve("/bin/getty", gettyargv, NULL);
+        }
     }
+    fclose(ttys);
+
+    // wait for all children
+    int wstatus;
+    while (wait(&wstatus) != -1) {}
 
     // we probably wont return
     return 0;
