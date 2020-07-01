@@ -52,8 +52,6 @@ void init_paging(void) {
 
     kprintf("paging initialized\n");
 }
-
-
 static void page_fault_handler(struct pushed_regs *regs) {
     acquire_global();
 
@@ -74,7 +72,8 @@ static void page_fault_handler(struct pushed_regs *regs) {
     split_addr(linaddr, dir_idx, tab_idx);
 
     if (!pd[dir_idx].present && !pd[dir_idx].petix_alloc) {
-        kprintf("this should be a segfault. pfla=%lx, ec=%lx, %%eip=%lx\n",
+        kprintf("pd=%p\n", pd);
+        kprintf("this should be a segfault (dir). pfla=%lx, ec=%lx, %%eip=%lx\n",
                 linaddr, regs->error_code, regs->eip);
         panic("unrecoverable page fault");
     }
@@ -85,6 +84,9 @@ static void page_fault_handler(struct pushed_regs *regs) {
         memset(tab, 0, PAGE_SIZE);
         for (size_t i = 0; i < PTAB_SIZE; ++i) {
             tab[i].petix_alloc = 1;
+            tab[i].present = 0;
+            tab[i].rw   = pd[dir_idx].rw;
+            tab[i].user = pd[dir_idx].user;
         }
         pd[dir_idx].present = 1;
         pd[dir_idx].page_table = (uint32_t) tab >> PAGE_SHIFT;
@@ -97,7 +99,7 @@ static void page_fault_handler(struct pushed_regs *regs) {
     struct page_tab_ent *tab = (void *) (pd[dir_idx].page_table << 12);
 
     if (!tab[tab_idx].present && !tab[tab_idx].petix_alloc) {
-        kprintf("this should be a segfault. pfla=%lx, ec=%lx, %%eip=%lx\n",
+        kprintf("this should be a segfault (page). pfla=%lx, ec=%lx, %%eip=%lx\n",
                 linaddr, regs->error_code, regs->eip);
         panic("unrecoverable page fault");
     }
@@ -110,6 +112,8 @@ static void page_fault_handler(struct pushed_regs *regs) {
         tab[tab_idx].addr = (uint32_t) page >> PAGE_SHIFT;
     }
 
+    // TODO: figure out if we need this
+    // flush_tlb();
 
     release_global();
 }
@@ -117,11 +121,14 @@ static void page_fault_handler(struct pushed_regs *regs) {
 addr_space_t create_proc_addr_space(void) {
     struct page_dir_ent *pd = alloc_page_ptr_sync();
     memcpy(pd, kpagedir.ents, PAGE_SIZE);
+    kprintf("pd=%p\n", pd);
 
     // null initialized pages above to 0xc000000
     for (size_t i = identity_len; i < PDIR_SIZE; ++i) {
-        pd[i].present        = 0;
-        pd[i].petix_alloc    = 1;
+        pd[i].present     = 0;
+        pd[i].rw          = 1;
+        pd[i].user        = 1;
+        pd[i].petix_alloc = 1;
     }
 
     return pd;

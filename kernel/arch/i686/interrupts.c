@@ -59,8 +59,8 @@ void general_interrupt_handler(struct pushed_regs regs) {
         }
         send_eoi(regs.irq);
     } else if (regs.exception != -1) {
-        kprintf("got exception: vecn=%li, code=%li, error_code=%lx\n",
-                regs.vecn, regs.exception, regs.error_code);
+        kprintf("got exception: vecn=%li, code=%li, error_code=%lx, eip=%lx\n",
+                regs.vecn, regs.exception, regs.error_code, regs.eip);
         panic("unhandled exception");
     } else {
         kprintf("got unhandled interrupt: %li\n", regs.vecn);

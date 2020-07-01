@@ -49,3 +49,9 @@ void enable_global_pages(void) {
                   "mov %%eax, %%cr4\n"
                   ::: "eax");
 }
+
+void flush_tlb(void) {
+    asm volatile ("    mov %%cr3, %%eax\n"
+                  "    mov %%eax, %%cr3\n"
+                  ::: "eax");
+}

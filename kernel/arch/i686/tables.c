@@ -16,13 +16,15 @@ static void set_gdt_limit(struct gdt_entry *ent, uint32_t limit) {
 }
 
 static struct gdt_descriptor gdt_desc;
-static struct gdt_entry gdt_entries[5];
+static struct gdt_entry gdt_entries[6];
+
+struct tss tss;
 
 void setup_gdt(void) {
     kassert(sizeof(struct gdt_descriptor) == 6);
     kassert(sizeof(struct gdt_entry) == 8);
 
-    gdt_desc.size = 3*sizeof(struct gdt_entry) - 1;
+    gdt_desc.size = 6*sizeof(struct gdt_entry) - 1;
     gdt_desc.offset = (uintptr_t) gdt_entries;
 
     // null descriptor
@@ -43,7 +45,26 @@ void setup_gdt(void) {
     gdt_entries[2].flags = 0xC;
     gdt_entries[2].access_byte = 0x92;
 
-    //TODO: tss
+    // ring 3 code
+    set_gdt_base(gdt_entries + 3, 0);
+    set_gdt_limit(gdt_entries + 3, 0xffffffff >> 12);
+    gdt_entries[3].flags = 0xC;
+    gdt_entries[3].access_byte = 0x9A | (3 << 5);
+
+    // ring 3 data
+    set_gdt_base(gdt_entries + 4, 0);
+    set_gdt_limit(gdt_entries + 4, 0xffffffff >> 12);
+    gdt_entries[4].flags = 0xC;
+    gdt_entries[4].access_byte = 0x92 | (3 << 5);
+
+    //tss
+    set_gdt_base(gdt_entries + 5, (uintptr_t) &tss);
+    set_gdt_limit(gdt_entries + 5, sizeof(struct tss));
+    gdt_entries[5].flags = 0x4;
+    gdt_entries[5].access_byte = 0x89 | (3 << 5);
+
+    tss.ss0  = 0x10;
+
 
     //kprintf("%p\n", &gdt_desc);
 
@@ -62,6 +83,9 @@ void setup_gdt(void) {
          "    mov %%ax, %%ss\n"
          ::: "eax"); // clobbers eax
 
+    asm ("    mov $0x2b, %%ax\n"
+         "    ltr %%ax\n"
+         : : : "ax");
 }
 
 static struct gdt_descriptor idt_desc;
@@ -80,6 +104,9 @@ void setup_idt(void) {
         idt_entries[i].type_attr = 0x8e;
         idt_entries[i].offset2   = (isrs[i] >> 16) & 0xffff;
     }
+
+    // allow userspace syscalls
+    idt_entries[0x80].type_attr |= (3 << 5);
 
     asm volatile ("lidt (%0)"
                   :

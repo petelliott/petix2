@@ -22,6 +22,8 @@ enum ready_state {
 
 #define NOT_WAITING -2
 
+#define KERNEL_STACK_SIZE 16384
+
 struct pcb {
     addr_space_t addr_space;
     pid_t pid;
@@ -34,6 +36,7 @@ struct pcb {
         struct file *file;
         bool cloexec;
     } fds[MAX_FDS];
+    void *kernel_stack;
 
     //TODO all kinds of other stuff
 };
@@ -45,6 +48,7 @@ pid_t get_pid(void);
 struct pcb *get_pcb(pid_t pid);
 
 struct pcb *alloc_proc(void);
+void release_proc(struct pcb *);
 
 int alloc_fd(struct pcb *pcb);
 void release_fd(struct pcb *pcb, int fd);

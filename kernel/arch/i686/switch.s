@@ -54,3 +54,25 @@ fork_switchable:
     pop %ebx
 
     ret /* compatible frame with context_switch */
+
+
+    .global jump_to_userspace
+    .type jump_to_userspace, @function
+
+jump_to_userspace:
+    mov 4(%esp), %ecx /* addr */
+    mov 8(%esp), %edx /* sp */
+
+    mov $0x23, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    /* mov %%ax, %%ss */ /* handled by iret */
+
+    push $0x23
+    push %edx
+    pushf
+    push $0x1b
+    push %ecx
+    iret

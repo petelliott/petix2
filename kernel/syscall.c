@@ -197,11 +197,11 @@ ssize_t sys_waitpid(pid_t pid, int *wstatus, int options) {
         struct pcb *cpcb = get_pcb(pcb->wait_pid);
 
         *wstatus = cpcb->return_code;
-        // destroy proc
-        cpcb->rs = RS_NOPROC;
-        cpcb->ppid = 0;
         pid_t pid = pcb->wait_pid;
         pcb->wait_pid = NOT_WAITING;
+
+        // destroy proc
+        release_proc(cpcb);
 
         release_global();
         return pid;
@@ -392,12 +392,7 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
 
     kfree_sync(data);
 
-    //TODO make this more portable
-    asm volatile ("mov %1, %%esp\n"
-                  "jmp *%0\n"
-                  :
-                  :"r" (entry),
-                   "r" (sp));
+    jump_to_userspace((void *)entry, (void *)sp);
     // should be unreachable
     return 4;
 }

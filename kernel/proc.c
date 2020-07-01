@@ -35,6 +35,8 @@ void init_proc(void) {
     memset(pcb->fds, 0, sizeof(pcb->fds));
 
     acquire_global();
+    set_hardware_kernel_stack(pcb->kernel_stack + KERNEL_STACK_SIZE);
+
     register_timer(timer_handler);
     set_cpu_interval(100000);
 
@@ -75,11 +77,24 @@ struct pcb *alloc_proc(void) {
     pcb->rs = RS_CREATED;
     pcb->pid = make_pid(pid_gen(pcb->pid) + 1, pt_free);
     pcb->ppid = -1;
-    pcb->wait_pid = NOT_WAITING;
+
+    pcb->kernel_stack = kmalloc(KERNEL_STACK_SIZE);
 
     release_global();
 
     return pcb;
+}
+
+void release_proc(struct pcb *pcb) {
+    acquire_global();
+
+    kfree(pcb->kernel_stack);
+    pcb->kernel_stack = NULL;
+    pcb->rs = RS_NOPROC;
+    pcb->ppid = 0;
+    pcb->wait_pid = NOT_WAITING;
+
+    release_global();
 }
 
 int alloc_fd(struct pcb *pcb) {
@@ -181,15 +196,13 @@ void sched(void) {
     }
 
     struct pcb *newpcb = &(ptable[off]);
+    newpcb->rs = RS_RUNNING;
     if (newpcb != curpcb) {
         // context switch does not work with the same process
-        newpcb->rs = RS_RUNNING;
         curpid = newpcb->pid;
 
-        //panic("debu");
+        set_hardware_kernel_stack(newpcb->kernel_stack + KERNEL_STACK_SIZE);
         context_switch(newpcb->stack_ptr, &(curpcb->stack_ptr), newpcb->addr_space);
-    } else {
-        curpcb->rs = RS_RUNNING;
     }
 
     release_global();

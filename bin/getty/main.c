@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
     dup2(ttyfd, STDIN_FILENO);
     dup2(ttyfd, STDOUT_FILENO);
     dup2(ttyfd, STDERR_FILENO);
+    close(ttyfd);
 
     char *const nargv[] = {"/bin/sh", NULL};
     execve("/bin/sh", nargv, NULL);
