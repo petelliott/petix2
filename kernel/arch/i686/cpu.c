@@ -15,6 +15,12 @@ void init_cpu(void) {
     setup_idt();
     register_interrupt_handler(33, keypress_int_handler);
     register_interrupt_handler(0x80, syscall_interrupt_handler);
+
+    asm ("    mov %%cr0, %%eax\n"
+         "    or  $0x20, %%eax\n"
+         "    mov %%eax, %%cr0\n"
+         "    fninit\n"
+         ::: "eax");
 }
 
 /* disable interrupts */
