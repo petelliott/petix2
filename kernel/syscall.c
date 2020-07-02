@@ -356,7 +356,7 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         for (argc = 0; argv[argc] != NULL; ++argc) {}
     }
 
-    uintptr_t sp = 0xfffffff0;
+    uintptr_t sp = (uintptr_t) STACK_TOP - KERNEL_STACK_SIZE;
 
     size_t argv_size = argc*sizeof(char *);
     char **tmp_argv = kmalloc_sync(argv_size);

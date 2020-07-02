@@ -72,7 +72,6 @@ static void page_fault_handler(struct pushed_regs *regs) {
     split_addr(linaddr, dir_idx, tab_idx);
 
     if (!pd[dir_idx].present && !pd[dir_idx].petix_alloc) {
-        kprintf("pd=%p\n", pd);
         kprintf("this should be a segfault (dir). pfla=%lx, ec=%lx, %%eip=%lx\n",
                 linaddr, regs->error_code, regs->eip);
         panic("unrecoverable page fault");
@@ -121,7 +120,6 @@ static void page_fault_handler(struct pushed_regs *regs) {
 addr_space_t create_proc_addr_space(void) {
     struct page_dir_ent *pd = alloc_page_ptr_sync();
     memcpy(pd, kpagedir.ents, PAGE_SIZE);
-    kprintf("pd=%p\n", pd);
 
     // null initialized pages above to 0xc000000
     for (size_t i = identity_len; i < PDIR_SIZE; ++i) {

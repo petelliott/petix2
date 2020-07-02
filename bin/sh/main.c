@@ -97,11 +97,12 @@ int main(int argc, char *argv[]) {
         prompt = false;
         f = fopen(argv[optind], "r");
         if (f == NULL) {
-            perror("fopen(3)");
+            fprintf(stderr, "\"%s\"\n", argv[1]);
+            perror("fopen(3)+");
             return 1;
         }
     } else {
-        fprintf(stderr, "usage: %s [-c] [script]\n", argv[0]);
+        fprintf(stderr, "usage: %s [-c COMMAND] [script]\n", argv[0]);
         return 1;
     }
 

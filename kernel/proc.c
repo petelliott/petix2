@@ -35,7 +35,7 @@ void init_proc(void) {
     memset(pcb->fds, 0, sizeof(pcb->fds));
 
     acquire_global();
-    set_hardware_kernel_stack(pcb->kernel_stack + KERNEL_STACK_SIZE);
+    set_hardware_kernel_stack(STACK_TOP);
 
     register_timer(timer_handler);
     set_cpu_interval(100000);
@@ -78,8 +78,6 @@ struct pcb *alloc_proc(void) {
     pcb->pid = make_pid(pid_gen(pcb->pid) + 1, pt_free);
     pcb->ppid = -1;
 
-    pcb->kernel_stack = kmalloc(KERNEL_STACK_SIZE);
-
     release_global();
 
     return pcb;
@@ -88,8 +86,6 @@ struct pcb *alloc_proc(void) {
 void release_proc(struct pcb *pcb) {
     acquire_global();
 
-    kfree(pcb->kernel_stack);
-    pcb->kernel_stack = NULL;
     pcb->rs = RS_NOPROC;
     pcb->ppid = 0;
     pcb->wait_pid = NOT_WAITING;
@@ -201,7 +197,6 @@ void sched(void) {
         // context switch does not work with the same process
         curpid = newpcb->pid;
 
-        set_hardware_kernel_stack(newpcb->kernel_stack + KERNEL_STACK_SIZE);
         context_switch(newpcb->stack_ptr, &(curpcb->stack_ptr), newpcb->addr_space);
     }
 
