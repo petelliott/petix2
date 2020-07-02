@@ -20,4 +20,7 @@ addr_space_t fork_proc_addr_space(addr_space_t as);
 
 void use_addr_space(addr_space_t as);
 
+// area must exist
+void lock_page(addr_space_t as, void *addr);
+
 #endif

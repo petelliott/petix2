@@ -52,6 +52,7 @@ void init_paging(void) {
 
     kprintf("paging initialized\n");
 }
+
 static void page_fault_handler(struct pushed_regs *regs) {
     acquire_global();
 
@@ -183,4 +184,16 @@ addr_space_t fork_proc_addr_space(addr_space_t as) {
 
 void use_addr_space(addr_space_t as) {
     load_page_dir(as);
+}
+
+void lock_page(addr_space_t as, void *addr) {
+    uintptr_t dir_idx, tab_idx;
+    split_addr((uintptr_t)addr, dir_idx, tab_idx);
+
+    kassert(as[dir_idx].present);
+    struct page_tab_ent *tab = (void *) (as[dir_idx].page_table << 12);
+
+    kassert(tab[tab_idx].present);
+    tab[tab_idx].user = 0;
+
 }

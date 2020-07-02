@@ -35,11 +35,13 @@ void init_proc(void) {
 
     //set up kernel stack
     for (int i = 0; i < KERNEL_STACK_SIZE; i += PAGE_SIZE){
-        volatile char b;
-        b = *(char *) (KERNEL_STACK_TOP - i);
+        char *pageaddr = (KERNEL_STACK_TOP - i);
 
+        volatile char b = *pageaddr;
         // prevent -Wunused-but-set and -Wset-but-unused
         b = b;
+
+        lock_page(pcb->addr_space, pageaddr);
     }
 
     memset(pcb->fds, 0, sizeof(pcb->fds));
