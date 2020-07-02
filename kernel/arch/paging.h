@@ -1,10 +1,14 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-
 //TODO: something more portable
 struct page_dir_ent;
 typedef struct page_dir_ent * addr_space_t;
+
+//TODO: something more portable
+#define KERNEL_STACK_SIZE 32768
+#define KERNEL_STACK_TOP (char *)0xffffffff
+#define USER_STACK_TOP (KERNEL_STACK_TOP - KERNEL_STACK_SIZE)
 
 void init_paging(void);
 

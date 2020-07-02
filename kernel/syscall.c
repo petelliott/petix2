@@ -271,20 +271,6 @@ ssize_t sys_fork(void) {
 ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
     int err;
 
-    //TODO: this is the worst way to set up a stack
-    volatile char b;
-    b = *(char *) 0xfffff000;
-    b = *(char *) 0xffffe000;
-    b = *(char *) 0xffffd000;
-    b = *(char *) 0xffffc000;
-    b = *(char *) 0xffffb000;
-    b = *(char *) 0xffffa000;
-    b = *(char *) 0xffff9000;
-    b = *(char *) 0xffff8000;
-
-    // prevent -Wunused-but-set and -Wset-but-unused
-    b = b;
-
     // close O_CLOEXEC fds
     struct pcb *pcb = get_pcb(get_pid());
 
@@ -356,7 +342,7 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         for (argc = 0; argv[argc] != NULL; ++argc) {}
     }
 
-    uintptr_t sp = (uintptr_t) STACK_TOP - KERNEL_STACK_SIZE;
+    uintptr_t sp = (uintptr_t) USER_STACK_TOP;
 
     size_t argv_size = argc*sizeof(char *);
     char **tmp_argv = kmalloc_sync(argv_size);

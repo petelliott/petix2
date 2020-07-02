@@ -22,8 +22,6 @@ enum ready_state {
 
 #define NOT_WAITING -2
 
-#define KERNEL_STACK_SIZE 32768
-#define STACK_TOP (void*)0xffffffff
 
 struct pcb {
     addr_space_t addr_space;

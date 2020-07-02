@@ -4,6 +4,7 @@
 #include "arch/cpu.h"
 #include "arch/switch.h"
 #include "kmalloc.h"
+#include "mem.h"
 #include <errno.h>
 #include <string.h>
 
@@ -32,10 +33,19 @@ void init_proc(void) {
     pcb->addr_space = create_proc_addr_space();
     use_addr_space(pcb->addr_space);
 
+    //set up kernel stack
+    for (int i = 0; i < KERNEL_STACK_SIZE; i += PAGE_SIZE){
+        volatile char b;
+        b = *(char *) (KERNEL_STACK_TOP - i);
+
+        // prevent -Wunused-but-set and -Wset-but-unused
+        b = b;
+    }
+
     memset(pcb->fds, 0, sizeof(pcb->fds));
 
     acquire_global();
-    set_hardware_kernel_stack(STACK_TOP);
+    set_hardware_kernel_stack(KERNEL_STACK_TOP);
 
     register_timer(timer_handler);
     set_cpu_interval(100000);
