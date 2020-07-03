@@ -131,12 +131,23 @@ static void t_scroll_up(void) {
     }
 }
 
-static struct ansi_backend backend = {
+static struct ansi_backend ansi_backend = {
     .putch = t_putch,
     .curto = t_curto,
     .scroll_up = t_scroll_up,
     .row_n = VGA_HEIGHT,
     .col_n = VGA_WIDTH
+};
+
+static struct ansi_term ansi_term = {
+    .backend = &ansi_backend
+};
+
+static struct tty_backend tty_backend = {
+    .row_n = VGA_HEIGHT,
+    .col_n = VGA_WIDTH,
+    .backend_data = &ansi_term,
+    .putch = (void (*)(void *, char))ansi_putch
 };
 
 static struct petix_tty tty;
@@ -172,7 +183,8 @@ static void onkeypress(int scancode);
 
 void tty_init(void) {
     enable_blink();
-    petix_tty_init(&tty, &backend);
+    ansi_init(&ansi_term);
+    petix_tty_init(&tty, &tty_backend);
 
     register_device(DEV_VGATTY, &fops);
     register_keypress(onkeypress);

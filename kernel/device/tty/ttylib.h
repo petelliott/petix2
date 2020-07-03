@@ -9,16 +9,22 @@
 
 #define TTY_BUFF_LEN 2048
 
+struct tty_backend {
+    int row_n, col_n;
+    void *backend_data;
+    void (*putch)(void *, char);
+};
+
 struct petix_tty {
     struct termios termios;
-    struct ansi_term output;
+    struct tty_backend *output;
     char buffer[TTY_BUFF_LEN];
     size_t fbase, lbase, loff;
     petix_lock_t read_lock, write_lock;
     petix_sem_t read_sem;
 };
 
-void petix_tty_init(struct petix_tty *tty, const struct ansi_backend *out);
+void petix_tty_init(struct petix_tty *tty, struct tty_backend *out);
 
 ssize_t petix_tty_read(struct petix_tty *tty, char *buf, size_t count);
 ssize_t petix_tty_write(struct petix_tty *tty, const char *buf, size_t count);

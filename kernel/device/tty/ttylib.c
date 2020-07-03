@@ -5,11 +5,10 @@
 
 #define SEND_CHAR -1
 
-void petix_tty_init(struct petix_tty *tty, const struct ansi_backend *out) {
+void petix_tty_init(struct petix_tty *tty, struct tty_backend *out) {
     memset(tty, 0, sizeof(struct petix_tty));
 
-    tty->output.backend = out;
-    ansi_init(&(tty->output));
+    tty->output = out;
 
     tty->termios.c_lflag = ICANON | ECHO | ISIG;
 }
@@ -74,7 +73,7 @@ ssize_t petix_tty_write(struct petix_tty *tty, const char *buf, size_t count) {
 
 
     for (size_t i = 0; i < count; ++i) {
-        ansi_putch(&tty->output, ((const char *)buf)[i]);
+        tty->output->putch(tty->output->backend_data, ((const char *)buf)[i]);
     }
 
     release_lock(&tty->write_lock);
@@ -156,10 +155,14 @@ ssize_t petix_tty_ioctl(struct petix_tty *tty, size_t req, va_list ap) {
         release_lock(&tty->read_lock);
         return 0;
     } else if (req == TIOCGWINSZ) {
-        struct winsize *wsize = va_arg(ap, void *);
-        wsize->ws_row = tty->output.backend->row_n;
-        wsize->ws_col = tty->output.backend->col_n;
-        return 0;
+        if (tty->output->row_n == -1) {
+            return -ENOTTY;
+        } else {
+            struct winsize *wsize = va_arg(ap, void *);
+            wsize->ws_row = tty->output->row_n;
+            wsize->ws_col = tty->output->col_n;
+            return 0;
+        }
     } else {
         return -ENOTTY;
     }
