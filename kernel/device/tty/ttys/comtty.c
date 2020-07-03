@@ -2,10 +2,12 @@
 
 #include "../ttylib.h"
 #include "../../../arch/i686/io.h"
+#include "../../../arch/i686/interrupts.h"
 #include "../../../device.h"
 
 #define COM1_DATA 0x3f8
 #define COM1_IE (COM1_DATA + 1)
+#define COM1_STATUS (COM1_DATA + 5)
 
 
 static void com_putch(void *backend_data, char ch) {
@@ -44,9 +46,26 @@ static struct file_ops fops = {
     .ioctl = dev_ioctl,
 };
 
+static void com1_interrupt_handler(struct pushed_regs *regs) {
+    while (inb(COM1_STATUS) & 0x1) {
+        char ch = inb(COM1_DATA);
+        if (ch == '\r') {
+            ch = '\n';
+        }
+        petix_tty_input_seq(&tty, &ch, 1);
+    }
+    send_eoi(regs->irq);
+}
+
 void comtty_init(void) {
     petix_tty_init(&tty, &tty_backend);
     register_device(DEV_COMTTY, &fops);
+
+    register_interrupt_handler(36, com1_interrupt_handler);
+
+    outb(COM1_IE, 1);
+    outb(COM1_DATA + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+    IRQ_clear_mask(4);
 }
 
 ssize_t comtty_write(const void *buf, size_t count) {

@@ -10,7 +10,7 @@ static void keypress_int_handler(struct pushed_regs *regs);
 
 void init_cpu(void) {
     cli();
-    clear_interrupt_handlers();
+    //clear_interrupt_handlers();
     setup_gdt();
     setup_idt();
     register_interrupt_handler(33, keypress_int_handler);

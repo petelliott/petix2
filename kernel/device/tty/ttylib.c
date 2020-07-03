@@ -98,13 +98,15 @@ static const char *const echo_map[128] = {
 
 void petix_tty_input_seq(struct petix_tty *tty, const char *seq, size_t n) {
     // we assume this is called while the global lock is acquired
-    if (seq[0] == '\b' && n == 1) {
+    if ((seq[0] == '\b' || seq[0] == 127) && n == 1) {
         if (tty->loff != tty->lbase) {
             tty->loff = (((tty->loff - 1)%TTY_BUFF_LEN)+TTY_BUFF_LEN)
                 % TTY_BUFF_LEN;
 
-            petix_tty_write(tty, "\b\b\b\b\b\b\b\b\b",
-                            strlen(echo_map[(uint8_t)tty->buffer[tty->loff]]));
+            size_t bslen = strlen(echo_map[(uint8_t)tty->buffer[tty->loff]]);
+            petix_tty_write(tty, "\b\b\b\b\b\b\b\b\b", bslen);
+            petix_tty_write(tty, "         ", bslen);
+            petix_tty_write(tty, "\b\b\b\b\b\b\b\b\b", bslen);
         }
     } else {
 
