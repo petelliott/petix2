@@ -1,13 +1,17 @@
 CC=i686-elf-gcc
-CFLAGS=-Wall -g -I$(shell pwd)/include/ -nostdlib -O0 -ffreestanding
+CFLAGS=-Wall -I$(shell pwd)/include/ -nostdlib -ffreestanding
 LIBS=-lgcc
 ROOT=$(shell pwd)/buildroot
 ARCH=i686
 export
 
-.PHONY: all clean petix2.iso run
+.PHONY: debug clean petix2.iso run release
 
-all: subdir
+debug: CFLAGS+=-g3 -ggdb -Og
+debug: subdir
+
+release: CFLAGS+=-O2 -s
+release: subdir
 
 petix2.iso:
 	grub-mkrescue -o $@ $(ROOT)
@@ -26,6 +30,7 @@ gdb:
 clean: subdir_clean
 	rm -r $(ROOT)
 	rm petix2.iso || true
+
 
 DIRS=skel libc kernel bin initrd
 
