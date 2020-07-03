@@ -85,10 +85,13 @@ struct mount_tree {
 
 struct mount_tree mount_root;
 
+// the path buffers in this file comprised most of the stack allocations in the
+// petix kernel, so now they all share this buffer.
+static char path[PATH_MAX];
+
 static int fs_getfs(const char *p, struct fs_inst **fs, const char **relpath) {
 
-    char path[PATH_MAX];
-    strncpy(path, p, PATH_MAX);
+    strncpy(path, p, sizeof(path));
     char *save;
 
     struct mount_tree *node = &mount_root;
@@ -155,8 +158,7 @@ int fs_lookup(const char *p, struct inode *inode) {
     } else {
         kassert(fs->iops->getroot != NULL);
 
-        char path[PATH_MAX];
-        strncpy(path, p2, PATH_MAX);
+        strncpy(path, p2, sizeof(path));
 
         fs->iops->getroot(fs, inode);
 
@@ -189,8 +191,7 @@ static void unmount_child(struct mount_tree *node) {
 int fs_mount(const char *targ, struct inode *src, const struct inode_ops *fs) {
     acquire_lock(&mount_lock);
 
-    char path[PATH_MAX];
-    strncpy(path, targ, PATH_MAX);
+    strncpy(path, targ, sizeof(path));
 
     char *save;
 

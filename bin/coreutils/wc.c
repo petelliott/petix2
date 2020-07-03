@@ -8,7 +8,7 @@ static bool wp = false;
 static bool cp = false;
 
 void wc_f(FILE *f, const char *name) {
-    int l=0,w=0,c=0;
+   int l=0,w=0,c=0;
 
     bool inw=false;
 

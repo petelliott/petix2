@@ -320,8 +320,9 @@ ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]) {
         //TODO dont read the whole file to check this
         char *save;
         char *script = strtok_r(cdata+2, " \n\t", &save);
-        char scbuff[PATH_MAX];
-        strncpy(scbuff, script, PATH_MAX);
+        //TODO standardize this somewhere
+        char scbuff[128];
+        strncpy(scbuff, script, sizeof(scbuff));
         kfree_sync(data);
 
         char *newargv[128] = {NULL};
