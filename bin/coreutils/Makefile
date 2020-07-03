@@ -1,6 +1,6 @@
 include ../../obj.mk
 
-OBJS = echo cat ls wc more md
+OBJS = echo cat ls wc more md man
 
 PROGS = $(patsubst %, $(ROOT)/bin/%, $(OBJS))
 

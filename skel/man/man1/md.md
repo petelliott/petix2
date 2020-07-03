@@ -15,3 +15,7 @@ md - render markdown to an ansi terminal
 ## General options
 
 `-w num`: set line wrap columns.
+
+# Author
+
+written by Peter Elliott

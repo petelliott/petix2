@@ -35,3 +35,7 @@ $ make petix2.iso
 ### installation instructions
 
 will be available once appropriate disk and file system drivers are ready
+
+### documentation
+
+markdown man pages are available in [skel/man](skel/man)
