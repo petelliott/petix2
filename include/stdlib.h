@@ -3,4 +3,6 @@
 
 int system(const char *command);
 
+int atoi(const char *nptr);
+
 #endif

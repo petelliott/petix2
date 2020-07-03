@@ -13,13 +13,13 @@ OBJS = string/strcmp.c.o string/strlen.c.o string/memset.c.o \
        stdio/fopen.c.o string/strcat.c.o dirent/getdent.c.o \
        unistd/pipe.c.o string/memchr.c.o stdio/fflush.c.o \
        unistd/exit.c.o sys/ioctl.c.o sys/termios.c.o stdio/sprintf.c.o \
-       unistd/getopt.c.o stdlib/system.c.o
+       unistd/getopt.c.o stdlib/system.c.o stdlib/atoi.c.o
 
 KOBJS = string/strcmp.c.o string/strlen.c.o string/memset.c.o \
         string/memcpy.c.o string/memcmp.c.o string/strerror.c.o \
         string/strtok.c.o string/strchr.c.o string/strncpy.c.o \
         bits/baseprintf.c.o string/strcat.c.o string/memchr.c.o \
-        stdio/sprintf.c.o
+        stdio/sprintf.c.o stdlib/atoi.c.o
 
 all: libc.a libk.a
 .PHONY: all clean

@@ -3,7 +3,7 @@
 
 all: $(ROOT)/boot/initrd.tar $(ROOT)/boot/initrd.tar.gz
 
-FILES=etc bin dev COPYING
+FILES=etc bin dev man COPYING
 
 $(ROOT)/boot/initrd.tar:
 	tar -b 1 -cf $@ -C $(ROOT) $(FILES)
