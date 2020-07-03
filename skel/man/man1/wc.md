@@ -8,7 +8,7 @@ wc - print newline word and byte counts for each file
 
 # Description
 
-print newline word and byte counts for each FILE.
+print newline, word, and byte counts for each FILE.
 
 with no FILE or when FILE is -, read stdin.
 

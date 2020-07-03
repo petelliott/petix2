@@ -1,5 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <unistd.h>
+
+static bool noflags = true;
+static bool lp = false;
+static bool wp = false;
+static bool cp = false;
 
 void wc_f(FILE *f, const char *name) {
     int l=0,w=0,c=0;
@@ -25,8 +31,10 @@ void wc_f(FILE *f, const char *name) {
     if (inw) {
         w++;
     }
-
-    printf("%i %i %i %s\n", l, w, c, name);
+    if (lp) printf("%i ", l);
+    if (wp) printf("%i ", w);
+    if (cp) printf("%i ", c);
+    printf("%s\n", name);
 }
 
 void wc(const char *file) {
@@ -44,11 +52,26 @@ void wc(const char *file) {
 }
 
 int main(int argc, char *argv[]) {
+    int opt;
+    while ((opt = getopt(argc, argv, "lwc")) != -1) {
+        noflags = false;
+        if (opt == 'l') {
+            lp = true;
+        } else if (opt == 'w') {
+            wp = true;
+        } else if (opt == 'c') {
+            cp = true;
+        }
+    }
 
-    if (argc == 1) {
+    if (noflags) {
+        lp = wp = cp = true;
+    }
+
+    if (argc-optind == 0) {
         wc_f(stdin, "");
     } else {
-        for (size_t i = 1; i < argc; ++i) {
+        for (size_t i = optind; i < argc; ++i) {
             wc(argv[i]);
         }
     }
