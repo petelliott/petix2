@@ -1,5 +1,6 @@
 #include "kdebug.h"
 #include "device/tty/ttys/vgatty.h"
+#include "device/tty/ttys/comtty.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 static int kputc(int ch, void *spec) {
     char c = ch;
     tty_write(&c, 1);
+    comtty_write(&c, 1);
     return 0;
 }
 

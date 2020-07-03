@@ -18,7 +18,8 @@ petix2.iso:
 
 run:
 	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \
-	                 -kernel $(ROOT)/boot/kernel
+	                 -kernel $(ROOT)/boot/kernel \
+	                 -serial stdio
 
 gdb:
 	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \

@@ -1,4 +1,5 @@
 #include "device/tty/ttys/vgatty.h"
+#include "device/tty/ttys/comtty.h"
 #include "multiboot.h"
 #include "tar.h"
 #include "kdebug.h"
@@ -16,12 +17,14 @@
 #include "fs/tarfs.h"
 #include "fs/devfs.h"
 
+#include "arch/i686/io.h"
 
 
 void kmain(unsigned long magic, unsigned long addr) {
     acquire_global();
 
     tty_init();
+    comtty_init();
     init_cpu();
     kassert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
@@ -55,9 +58,6 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
-
-    release_global();
-
     struct inode in = {
         .ftype = FT_SPECIAL,
         .dev = MKDEV(DEV_INITRD, 0),
@@ -65,6 +65,8 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     fs_mount("/", &in, get_tarfs());
     fs_mount("/dev", &in, get_devfs());
+
+    release_global();
 
     init_proc();
 
