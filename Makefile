@@ -5,7 +5,7 @@ ROOT=$(shell pwd)/buildroot
 ARCH=i686
 export
 
-.PHONY: debug clean petix2.iso run release
+.PHONY: debug clean petix2.iso run run-iso release
 
 debug: CFLAGS+=-g3 -ggdb -Og
 debug: subdir
@@ -20,6 +20,11 @@ run:
 	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \
 	                 -kernel $(ROOT)/boot/kernel \
 	                 -serial mon:stdio
+
+run-iso:
+	qemu-system-i386 -cdrom petix2.iso \
+	                 -serial mon:stdio
+
 
 gdb:
 	qemu-system-i386 -initrd "$(ROOT)/boot/initrd.tar initrd" \

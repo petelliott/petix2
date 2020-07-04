@@ -39,3 +39,10 @@ will be available once appropriate disk and file system drivers are ready
 ### documentation
 
 markdown man pages are available in [skel/man](skel/man)
+
+### early framebuffer support
+
+to enable the frame buffer, uncomment line 6 of [kernel/arch/i686/boot.s].
+
+you will probably also want a termial, so add the line `/dev/comtty` to
+[skel/etc/ttys].

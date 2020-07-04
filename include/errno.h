@@ -18,6 +18,7 @@ enum errno_ns {
     EAGAIN = 11,
 
     EACCES = 13,
+    EFAULT = 14,
 
     ENODEV  = 19,
     ENOTDIR = 20,
@@ -28,6 +29,8 @@ enum errno_ns {
     ENOTTY  = 25,
 
     ENOSYS  = 38,
+
+    ENOTSUP = 95,
 };
 
 #endif

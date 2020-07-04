@@ -13,6 +13,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include "mem.h"
 
 
 //TODO
@@ -30,6 +31,7 @@ syscall_t syscall_table[256] = {
 
     [SYS_NR_IOCTL]   = sys_ioctl,
 
+    [SYS_NR_MMAP]    = sys_mmap,
     [SYS_NR_PIPE]    = sys_pipe,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK]     = sys_fork,
@@ -233,6 +235,11 @@ void *sys_mmap(void *addr, size_t len, size_t prot, size_t flags,
                int fd, off_t off, int *errno) {
 
     if (len == 0) {
+        *errno = EINVAL;
+        return MAP_FAILED;
+    }
+
+    if ((uintptr_t)addr & (PAGE_SIZE-1)) {
         *errno = EINVAL;
         return MAP_FAILED;
     }

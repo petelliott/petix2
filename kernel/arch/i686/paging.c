@@ -142,7 +142,9 @@ void free_proc_addr_space(addr_space_t as) {
         if (as[i].present && as[i].petix_alloc) {
             struct page_tab_ent *pte = (void *) (as[i].page_table << PAGE_SHIFT);
             for (size_t j = 0; j < PTAB_SIZE; ++j) {
-                free_page_sync(pte[j].addr);
+                if (pte[j].present && pte[j].petix_alloc) {
+                    free_page_sync(pte[j].addr);
+                }
             }
 
             free_page_sync(as[i].page_table);
@@ -196,4 +198,31 @@ void lock_page(addr_space_t as, void *addr) {
     kassert(tab[tab_idx].present);
     tab[tab_idx].user = 0;
 
+}
+
+int remap_page_user(addr_space_t as, void *virt, void *phys) {
+    if (virt < (void*)PROC_REGION || (char *)virt > USER_STACK_TOP) {
+        return -1;
+    }
+
+    // force page table to be loaded for virt
+    // TODO: avoid extra allocation
+    volatile char a = *(char *) virt;
+    a = a;
+
+    uintptr_t dir_idx, tab_idx;
+    split_addr((uintptr_t)virt, dir_idx, tab_idx);
+
+    kassert(as[dir_idx].present);
+    struct page_tab_ent *tab = (void *) (as[dir_idx].page_table << 12);
+
+    kassert(tab[tab_idx].present);
+
+    if (tab[tab_idx].present && tab[tab_idx].petix_alloc) {
+        free_page_sync(tab[tab_idx].addr);
+        tab[tab_idx].petix_alloc = false;
+    }
+
+    tab[tab_idx].addr = (uintptr_t) phys >> 12;
+    return 0;
 }

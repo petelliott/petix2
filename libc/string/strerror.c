@@ -13,6 +13,7 @@ static const char * const errtab[] = {
     [ECHILD] = "No child processes",
     [EAGAIN] = "Resource temporarily unavailable",
     [EACCES] = "Permission denied",
+    [EFAULT] = "Bad address",
     [ENODEV] = "No such device",
     [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",
@@ -20,6 +21,7 @@ static const char * const errtab[] = {
     [EMFILE] = "Too many open files",
     [ENOTTY] = "Inappropriate ioctl for device",
     [ENOSYS] = "Function not Implemented",
+    [ENOTSUP] = "Operation not supported",
 };
 
 const char *strerror(int errnum) {

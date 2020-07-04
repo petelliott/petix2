@@ -16,8 +16,7 @@
 #include "fs.h"
 #include "fs/tarfs.h"
 #include "fs/devfs.h"
-
-#include "arch/i686/io.h"
+#include "device/fb.h"
 
 
 void kmain(unsigned long magic, unsigned long addr) {
@@ -31,6 +30,14 @@ void kmain(unsigned long magic, unsigned long addr) {
     multiboot_info_t *mbi = (multiboot_info_t *) addr;
 
     multiboot_module_t *mods = (multiboot_module_t *) mbi->mods_addr;
+
+    if (mbi->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+        kprintf("found framebuffer %p\n",
+                (void *)(uintptr_t)mbi->framebuffer_addr);
+        fb_init((void *)(uintptr_t)mbi->framebuffer_addr,
+                mbi->framebuffer_width,
+                mbi->framebuffer_height);
+    }
 
     kassert(mbi->mods_count == 1);
 
@@ -58,6 +65,7 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
+
     struct inode in = {
         .ftype = FT_SPECIAL,
         .dev = MKDEV(DEV_INITRD, 0),
@@ -69,8 +77,6 @@ void kmain(unsigned long magic, unsigned long addr) {
     release_global();
 
     init_proc();
-
-    //volatile char b = *(char *) NULL;
 
     // here we go!
     char *argv[] = {NULL};

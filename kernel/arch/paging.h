@@ -23,4 +23,8 @@ void use_addr_space(addr_space_t as);
 // area must exist
 void lock_page(addr_space_t as, void *addr);
 
+int remap_page_user(addr_space_t as, void *virt, void *phys);
+
+void flush_tlb(void);
+
 #endif

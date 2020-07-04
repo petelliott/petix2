@@ -9,6 +9,9 @@ enum ioctl_values {
 
     TIOCGWINSZ,
     TIOCSWINSZ,
+
+    FB_IOCTL_SIZE,
+    FB_IOCTL_GET_RESOLUTION,
 };
 
 struct winsize {
