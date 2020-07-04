@@ -19,6 +19,7 @@ enum errno_ns {
 
     EACCES = 13,
 
+    ENODEV  = 19,
     ENOTDIR = 20,
     EISDIR  = 21,
     EINVAL  = 22,

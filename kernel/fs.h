@@ -21,6 +21,7 @@ struct file_ops {
     ssize_t (*write)(struct file *, const char *, size_t);
     int (*getdent)(struct file *, struct petix_dirent *);
     int (*ioctl)(struct file *, unsigned long, va_list);
+    void *(*mmap)(struct file *, void *, size_t, int, int, off_t, int *);
 
     int (*close)(struct file *);
 };

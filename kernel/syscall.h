@@ -25,6 +25,9 @@ ssize_t sys_waitpid(pid_t pid, int *wstatus, int options);
 
 ssize_t sys_ioctl(ssize_t fd, size_t req, ...);
 
+void *sys_mmap(void *addr, size_t len, size_t prot, size_t flags,
+               int filedes, off_t off, int *errno);
+
 ssize_t sys_sched_yield(void);
 ssize_t sys_fork(void);
 ssize_t sys_exec(const char *path, char *const argv[], char *const envp[]);

@@ -13,6 +13,7 @@ static const char * const errtab[] = {
     [ECHILD] = "No child processes",
     [EAGAIN] = "Resource temporarily unavailable",
     [EACCES] = "Permission denied",
+    [ENODEV] = "No such device",
     [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",
     [EINVAL] = "Invalid argument",

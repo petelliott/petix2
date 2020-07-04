@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 
 
 //TODO
@@ -226,6 +227,31 @@ ssize_t sys_ioctl(ssize_t fd, size_t req, ...) {
     va_list ap;
     va_start(ap, req);
     return f->fops->ioctl(f, req, ap);
+}
+
+void *sys_mmap(void *addr, size_t len, size_t prot, size_t flags,
+               int fd, off_t off, int *errno) {
+
+    if (len == 0) {
+        *errno = EINVAL;
+        return MAP_FAILED;
+    }
+
+    struct pcb *pcb = get_pcb(get_pid());
+
+    if (fd >= MAX_FDS || fd < 0 || pcb->fds[fd].file == NULL) {
+        *errno = EBADF;
+        return MAP_FAILED;
+    }
+
+    struct file *f = pcb->fds[fd].file;
+
+    if (f->fops->mmap == NULL) {
+        *errno = ENODEV;
+        return MAP_FAILED;
+    }
+
+    return f->fops->mmap(f, addr, len, prot, flags, off, errno);
 }
 
 ssize_t sys_db_print(const char *str) {
