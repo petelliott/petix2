@@ -1,5 +1,6 @@
 #include "device/tty/ttys/vgatty.h"
 #include "device/tty/ttys/comtty.h"
+#include "device/tty/ttys/fbtty.h"
 #include "multiboot.h"
 #include "tar.h"
 #include "kdebug.h"
@@ -30,14 +31,6 @@ void kmain(unsigned long magic, unsigned long addr) {
     multiboot_info_t *mbi = (multiboot_info_t *) addr;
 
     multiboot_module_t *mods = (multiboot_module_t *) mbi->mods_addr;
-
-    if (mbi->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-        kprintf("found framebuffer %p\n",
-                (void *)(uintptr_t)mbi->framebuffer_addr);
-        fb_init((void *)(uintptr_t)mbi->framebuffer_addr,
-                mbi->framebuffer_width,
-                mbi->framebuffer_height);
-    }
 
     kassert(mbi->mods_count == 1);
 
@@ -73,6 +66,15 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     fs_mount("/", &in, get_tarfs());
     fs_mount("/dev", &in, get_devfs());
+
+    if (mbi->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+        kprintf("found framebuffer %p\n",
+                (void *)(uintptr_t)mbi->framebuffer_addr);
+        fb_init((void *)(uintptr_t)mbi->framebuffer_addr,
+                mbi->framebuffer_width,
+                mbi->framebuffer_height);
+        fbtty_init();
+    }
 
     release_global();
 

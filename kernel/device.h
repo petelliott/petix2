@@ -9,6 +9,7 @@ enum device_majors {
     DEV_RANDOM = 2,
     DEV_COMTTY = 3,
     DEV_FB     = 4,
+    DEV_FBTTY  = 5,
 };
 
 #endif

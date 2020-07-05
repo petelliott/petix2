@@ -18,8 +18,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    for (size_t i = 0; i < 786432; ++i) {
-        fb[i] = 0x32a852;
+    int w, h;
+    if (ioctl(fd, FB_IOCTL_GET_RESOLUTION, &w, &h) == -1) {
+        perror("ioctl(2)");
+        return 1;
+    }
+
+    printf("resolution=%ix%i\n", w, h);
+
+    for (size_t y = 0; y < h; ++y) {
+        for (size_t x = 0; x < w; ++x) {
+            int color = (x/8 + y/16) % 3;
+            fb[y*w+x] = 0xff0000 >> (color * 8);
+        }
     }
 
     close(fd);

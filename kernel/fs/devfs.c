@@ -37,6 +37,10 @@ static int getdent(struct file *f, struct petix_dirent *d) {
         d->inode_id = 2;
         d->present = true;
         strncpy(d->name, "fb", sizeof(d->name));
+    } else if (f->offset == 3) {
+        d->inode_id = 3;
+        d->present = true;
+        strncpy(d->name, "fbtty", sizeof(d->name));
     } else {
         d->present = false;
     }
@@ -56,6 +60,8 @@ static int lookup_all(struct fs_inst *fs, const char *path, struct inode *in) {
         in->dev = MKDEV(DEV_COMTTY, 0);
     } else if (strcmp(path, "fb") == 0) {
         in->dev = MKDEV(DEV_FB, 0);
+    } else if (strcmp(path, "fbtty") == 0) {
+        in->dev = MKDEV(DEV_FBTTY, 0);
     } else {
         return -ENOENT;
     }

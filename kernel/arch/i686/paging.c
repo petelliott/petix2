@@ -226,3 +226,20 @@ int remap_page_user(addr_space_t as, void *virt, void *phys) {
     tab[tab_idx].addr = (uintptr_t) phys >> 12;
     return 0;
 }
+
+void remap_page_kernel(void *virt, void *phys) {
+    uintptr_t dir_idx, tab_idx;
+    split_addr((uintptr_t)virt, dir_idx, tab_idx);
+
+    kassert(kpagedir.ents[dir_idx].present);
+    struct page_tab_ent *tab = (void *) (kpagedir.ents[dir_idx].page_table << 12);
+
+    kassert(tab[tab_idx].present);
+
+    if (tab[tab_idx].present && tab[tab_idx].petix_alloc) {
+        free_page_sync(tab[tab_idx].addr);
+        tab[tab_idx].petix_alloc = false;
+    }
+
+    tab[tab_idx].addr = (uintptr_t) phys >> 12;
+}
