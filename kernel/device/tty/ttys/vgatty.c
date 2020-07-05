@@ -4,12 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include "../../../arch/cpu.h"
 #include "../../../kdebug.h"
 #include "../../../sync.h"
 #include "../../../device.h"
 #include "../ansiseq.h"
 #include "../ttylib.h"
+#include "../kbd.h"
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -179,7 +179,6 @@ static struct file_ops fops = {
     .ioctl = dev_ioctl,
 };
 
-static void onkeypress(int scancode);
 
 void tty_init(void) {
     enable_blink();
@@ -187,83 +186,9 @@ void tty_init(void) {
     petix_tty_init(&tty, &tty_backend);
 
     register_device(DEV_VGATTY, &fops);
-    register_keypress(onkeypress);
+    register_kbd_tty(&tty);
 }
 
 ssize_t tty_write(const void *buf, size_t count) {
     return petix_tty_write(&tty, buf, count);
-}
-
-// input functions
-
-
-// stolen from serenityos
-static const char en_map[0x80] = {
-    0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',
-    '=', 0x08, '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
-    '[', ']', '\n', 0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
-    ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',',
-    '.', '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,
-};
-
-static const char en_shift_map[0x80] = {
-    0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_',
-    '+', 0x08, '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
-    '{', '}', '\n', 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
-    ':', '"', '~', 0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<',
-    '>', '?', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, '|', 0, 0, 0,
-};
-
-
-static bool shifted = false;
-static bool ctrld   = false;
-
-// returns -1 if invalid
-static char sc_to_ascii(int scancode) {
-    if (ctrld) {
-        char ch = en_map[scancode];
-        if (ch == 0) {
-            return -1;
-        }
-
-        if (ch >= 'a') {
-            return ch - 0x60;
-        } else {
-            return 0;
-        }
-    }
-
-    char ret;
-    if (shifted) {
-        ret = en_shift_map[scancode];
-    } else {
-        ret = en_map[scancode];
-    }
-
-    if (ret == 0) {
-        return -1;
-    }
-    return ret;
-}
-
-// interrupt handler
-static void onkeypress(int scancode) {
-    acquire_global();
-    if (scancode == 0x36 || scancode == 0x2a) {
-        shifted = true;
-    } else if (scancode == 0xb6 || scancode == 0xaa) {
-        shifted = false;
-    } else if (scancode == 0x1d) {
-        ctrld = true;
-    } else if (scancode == 0x9d) {
-        ctrld = false;
-    } else if (scancode < 0x80) {
-        char ch = sc_to_ascii(scancode);
-        if (ch != -1) {
-            petix_tty_input_seq(&tty, &ch, 1);
-        }
-    }
-    release_global();
 }

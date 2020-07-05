@@ -5,7 +5,9 @@
 #include "../../../kmalloc.h"
 #include "../ansiseq.h"
 #include "../ttylib.h"
+#include "../kbd.h"
 #include <errno.h>
+#include <string.h>
 
 #define CH_WIDTH 8
 #define CH_HEIGHT 16
@@ -87,9 +89,9 @@ static void f_putch(const struct ansi_rendition *r, char ch, int row, int col) {
         fg_colour = ansi_to_rgb[ANSI_WHITE];
     } else {
         if (r->flags.f.bold) {
-            fg_colour = ansi_to_rgb[r->fg];
-        } else {
             fg_colour = ansi_to_rgb_bold[r->fg];
+        } else {
+            fg_colour = ansi_to_rgb[r->fg];
         }
     }
 
@@ -148,8 +150,35 @@ static void f_curto(int row, int col) {
     }
 }
 
+static void curoff(void) {
+    if (curx != -1) {
+        int ybase = cury*CH_HEIGHT;
+        int xbase = curx*CH_WIDTH;
+
+        for (int y = CH_HEIGHT-1; y < CH_HEIGHT; ++y) {
+            for (int x = 0; x < CH_WIDTH; ++x) {
+                    kernel_framebuffer[(ybase+y)*fb_width + (xbase+x)] =
+                        ansi_to_rgb[ANSI_BLACK];
+            }
+        }
+    }
+    curx = -1;
+    cury = -1;
+}
+
+static struct ansi_backend ansi_backend;
+
 static void f_scroll_up(void) {
-    //TODO scroll up 1 char
+    curoff();
+    int pixels = fb_width * CH_HEIGHT;
+	for (size_t y = 0; y < ansi_backend.row_n - 1; y++) {
+        memcpy(&kernel_framebuffer[y*pixels],
+               &kernel_framebuffer[(y+1)*pixels],
+               pixels * sizeof(fb_pixel_t));
+    }
+
+    memset(&kernel_framebuffer[(ansi_backend.row_n-1)*pixels],
+           0, pixels * sizeof(fb_pixel_t));
 }
 
 static struct ansi_backend ansi_backend = {
@@ -214,6 +243,7 @@ void fbtty_init(void) {
     ansi_init(&ansi_term);
     petix_tty_init(&tty, &tty_backend);
 
+    register_kbd_tty(&tty);
     register_device(DEV_FBTTY, &fops);
     initialized = true;
 }
