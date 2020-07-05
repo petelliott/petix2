@@ -86,7 +86,11 @@ static void f_putch(const struct ansi_rendition *r, char ch, int row, int col) {
     fb_pixel_t bg_colour;
 
     if (r->fg == ANSI_DEFAULT) {
-        fg_colour = ansi_to_rgb[ANSI_WHITE];
+        if (r->flags.f.bold) {
+            fg_colour = ansi_to_rgb_bold[ANSI_WHITE];
+        } else {
+            fg_colour = ansi_to_rgb[ANSI_WHITE];
+        }
     } else {
         if (r->flags.f.bold) {
             fg_colour = ansi_to_rgb_bold[r->fg];
