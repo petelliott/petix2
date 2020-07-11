@@ -1,6 +1,7 @@
 #include "ansiseq.h"
 #include "../../kdebug.h"
 #include <string.h>
+#include <stdio.h>
 
 
 static void clear(struct ansi_term *term) {
@@ -14,8 +15,13 @@ static void clear(struct ansi_term *term) {
 
 void ansi_init(struct ansi_term *term) {
     const struct ansi_backend *b = term->backend;
+    struct petix_tty *t = term->tty;
     memset(term, 0, sizeof(term));
     term->backend = b;
+    term->tty = t;
+
+    kassert(term->tty != NULL);
+    kassert(term->backend != NULL);
 
     term->state = ANSI_S_NONE;
 
@@ -121,10 +127,17 @@ void ansi_putch(struct ansi_term *term, char ch) {
     } else if (term->state == ANSI_S_ESC) {
         term->state = ANSI_S_NONE;
     } else if (term->state == ANSI_S_ESC_LBRAK) {
+        term->state = ANSI_S_NONE;
         if (ch == 'm') {
             process_rendition_command(term, nargs);
+        } else if (ch == 'n' && nargs == 1 && term->numerics[0] == 6) {
+            char seq[11];
+            sprintf(seq, "\e[%i;%iR",
+                    term->row,
+                    term->col);
+
+            petix_tty_input_seq(term->tty, seq, strnlen(seq, sizeof(seq)));
         }
-        term->state = ANSI_S_NONE;
     } else {
         panic("unsupported ansi terminal state");
     }

@@ -17,6 +17,7 @@ struct proc_lst {
 typedef struct {
     struct proc_lst *lst;
     pid_t held_by;
+    size_t lcnt;
     bool locked;
     bool global;
 } petix_lock_t;

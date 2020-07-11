@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "ttylib.h"
 
 enum ansi_color {
     ANSI_BLACK   = 0,
@@ -58,6 +59,7 @@ struct ansi_term {
 
     struct ansi_rendition rendition;
     const struct ansi_backend *backend;
+    struct petix_tty *tty;
 };
 void ansi_init(struct ansi_term *term);
 void ansi_putch(struct ansi_term *term, char ch);

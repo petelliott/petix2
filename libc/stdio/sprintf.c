@@ -5,6 +5,7 @@ static int sputc(int c, void *special) {
     char **cs = (char **) special;
     **cs = c;
     (*cs)++;
+    **cs = 0; // null terminate
     return 0;
 }
 

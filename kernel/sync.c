@@ -37,7 +37,8 @@ void acquire_lock(petix_lock_t *lock) {
 
     if (slocks) {
         if (lock->locked && (lock->held_by == get_pid() || lock->global)) {
-            panic("attempt to re-acquire lock");
+            //panic("attempt to re-acquire lock");
+            lock->lcnt++;
         } else if (lock->locked) {
             struct proc_lst *nplist = kmalloc(sizeof(struct proc_lst));
             nplist->pid = get_pid();
@@ -55,6 +56,7 @@ void acquire_lock(petix_lock_t *lock) {
             lock->locked = true;
             lock->held_by = get_pid();
             lock->global = false;
+            lock->lcnt = 0;
         }
     } else {
         kassert(lock->locked == false);
@@ -76,14 +78,18 @@ void release_lock(petix_lock_t *lock) {
         if (!(lock->locked && (lock->held_by == get_pid() || lock->global))) {
             panic("attempt to release un-acquired lock");
         } else if (lock->locked) {
-            lock->locked = false;
-            lock->held_by = 0;
-            for (struct proc_lst *lst = lock->lst; lst != NULL;
-                 lst = lst->next, kfree(lst)) {
-                struct pcb *pcb = get_pcb(lst->pid);
-                pcb->rs = RS_READY;
+            if (lock->lcnt == 0) {
+                lock->locked = false;
+                lock->held_by = 0;
+                for (struct proc_lst *lst = lock->lst; lst != NULL;
+                    lst = lst->next, kfree(lst)) {
+                    struct pcb *pcb = get_pcb(lst->pid);
+                    pcb->rs = RS_READY;
+                }
+                lock->lst = NULL;
+            } else {
+                lock->lcnt--;
             }
-            lock->lst = NULL;
         }
     }
 

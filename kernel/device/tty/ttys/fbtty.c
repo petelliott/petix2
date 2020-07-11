@@ -193,8 +193,11 @@ static struct ansi_backend ansi_backend = {
     .col_n = 0,
 };
 
+static struct petix_tty tty;
+
 static struct ansi_term ansi_term = {
-    .backend = &ansi_backend
+    .backend = &ansi_backend,
+    .tty     = &tty
 };
 
 static struct tty_backend tty_backend = {
@@ -204,7 +207,6 @@ static struct tty_backend tty_backend = {
     .putch = (void (*)(void *, char))ansi_putch
 };
 
-static struct petix_tty tty;
 
 static int dev_open(struct inode *in, struct file *file, int flags) {
     return 0;
