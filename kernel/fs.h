@@ -34,6 +34,8 @@ struct inode_ops {
     int (*lookup)(struct inode *, const char *fname, struct inode *);
     int (*lookup_all)(struct fs_inst *, const char *path, struct inode *);
 
+    int (*creat)(struct inode *, const char *name);
+    int (*mkdir)(struct inode *, const char *name);
 };
 
 struct inode {

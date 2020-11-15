@@ -17,6 +17,8 @@ enum syscall_nums {
     SYS_NR_PIPE    = 7,
     SYS_NR_IOCTL   = 8,
     SYS_NR_MMAP    = 9,
+    SYS_NR_CREAT   = 10,
+    SYS_NR_MKDIR   = 11,
     SYS_NR_SCHED_YIELD = 24,
     SYS_NR_FORK     = 57,
     SYS_NR_EXEC     = 59,

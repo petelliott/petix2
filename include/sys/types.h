@@ -23,4 +23,6 @@ struct petix_dirent {
     char name[FILE_NAME_LEN];
 };
 
+typedef uint32_t mode_t;
+
 #endif

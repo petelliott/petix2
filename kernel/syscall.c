@@ -32,6 +32,8 @@ syscall_t syscall_table[256] = {
     [SYS_NR_IOCTL]   = sys_ioctl,
 
     [SYS_NR_MMAP]    = sys_mmap,
+    [SYS_NR_CREAT]   = sys_creat,
+    [SYS_NR_MKDIR]   = sys_mkdir,
     [SYS_NR_PIPE]    = sys_pipe,
     [SYS_NR_SCHED_YIELD] = sys_sched_yield,
     [SYS_NR_FORK]     = sys_fork,
@@ -154,6 +156,75 @@ ssize_t sys_getdent(ssize_t fd, struct petix_dirent *dent) {
     }
 
     return f->fops->getdent(f, dent);
+}
+
+static const char *empty_string = "";
+static void split_dir_path(char *path, char const **dir, char const **name) {
+    *name = path;
+    *dir = empty_string;
+
+    for (size_t i = 0; path[i] != '\0'; ++i) {
+        if (path[i] == '/') {
+            *name = &path[i + 1];
+            *dir = path;
+        }
+    }
+
+    if (empty_string) {
+        path[(*name-path) - 1] = 0;
+    }
+}
+
+ssize_t sys_creat(const char *path) {
+    char mut_path[PATH_MAX];
+    strncpy(mut_path, path, sizeof(mut_path));
+
+    const char *dir = NULL;
+    const char *name = NULL;
+    split_dir_path(mut_path, &dir, &name);
+
+    struct inode inode;
+
+    int rc = fs_lookup(dir, &inode);
+    if (rc < 0) {
+        return rc;
+    }
+
+    if (inode.ftype != FT_DIR) {
+        return -ENOTDIR;
+    }
+
+    if (inode.fs->iops->creat == NULL) {
+        return -EPERM;
+    }
+
+    return inode.fs->iops->creat(&inode, name);
+}
+
+ssize_t sys_mkdir(const char *path) {
+    char mut_path[PATH_MAX];
+    strncpy(mut_path, path, sizeof(mut_path));
+
+    const char *dir = NULL;
+    const char *name = NULL;
+    split_dir_path(mut_path, &dir, &name);
+
+    struct inode inode;
+
+    int rc = fs_lookup(dir, &inode);
+    if (rc < 0) {
+        return rc;
+    }
+
+    if (inode.ftype != FT_DIR) {
+        return -ENOTDIR;
+    }
+
+    if (inode.fs->iops->mkdir == NULL) {
+        return -EPERM;
+    }
+
+    return inode.fs->iops->mkdir(&inode, name);
 }
 
 ssize_t sys_pipe(int filedes[2], size_t flags) {
