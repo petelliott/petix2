@@ -28,7 +28,7 @@ all: libc.a libk.a
 libc.a: $(OBJS)
 	$(AR) cr $@ $?
 
-libk.a: $(OBJS)
+libk.a: $(KOBJS)
 	$(AR) cr $@ $?
 
 clean:

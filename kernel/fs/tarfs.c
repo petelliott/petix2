@@ -21,11 +21,11 @@ static int topen(struct inode *in, struct file *f, int flags) {
 #define MIN(a, b) (((a)<(b))? (a):(b))
 
 static ssize_t tread(struct file *f, char *buf, size_t n) {
+    acquire_lock(&(f->inode.fs->lock));
     size_t len = MIN(f->size - f->offset, n);
 
     off_t off = f->private_data + f->offset;
 
-    acquire_lock(&(f->inode.fs->lock));
     f->inode.fs->file.fops->lseek(&(f->inode.fs->file), off, SEEK_SET);
     int ret = f->inode.fs->file.fops->read(&(f->inode.fs->file), buf, len);
     if (ret > 0) {
