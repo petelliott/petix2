@@ -186,8 +186,7 @@ static void split_dir_path(char *path, char const **dir, char const **name) {
 }
 
 ssize_t sys_creat(const char *path) {
-    char mut_path[PATH_MAX];
-    strncpy(mut_path, path, sizeof(mut_path));
+    char *mut_path = kstrdup_sync(path);
 
     const char *dir = NULL;
     const char *name = NULL;
@@ -197,23 +196,20 @@ ssize_t sys_creat(const char *path) {
 
     int rc = fs_lookup(dir, &inode);
     if (rc < 0) {
-        return rc;
+    } else if (inode.ftype != FT_DIR) {
+        rc = -ENOTDIR;
+    } else if (inode.fs->iops->creat == NULL) {
+        rc = -EPERM;
+    } else {
+        rc = inode.fs->iops->creat(&inode, name);
     }
 
-    if (inode.ftype != FT_DIR) {
-        return -ENOTDIR;
-    }
-
-    if (inode.fs->iops->creat == NULL) {
-        return -EPERM;
-    }
-
-    return inode.fs->iops->creat(&inode, name);
+    kfree_sync(mut_path);
+    return rc;
 }
 
 ssize_t sys_mkdir(const char *path) {
-    char mut_path[PATH_MAX];
-    strncpy(mut_path, path, sizeof(mut_path));
+    char *mut_path = kstrdup_sync(path);
 
     const char *dir = NULL;
     const char *name = NULL;
@@ -223,18 +219,16 @@ ssize_t sys_mkdir(const char *path) {
 
     int rc = fs_lookup(dir, &inode);
     if (rc < 0) {
-        return rc;
+    } else if (inode.ftype != FT_DIR) {
+        rc = -ENOTDIR;
+    } else if (inode.fs->iops->mkdir == NULL) {
+        rc = -EPERM;
+    } else {
+        rc = inode.fs->iops->mkdir(&inode, name);
     }
 
-    if (inode.ftype != FT_DIR) {
-        return -ENOTDIR;
-    }
-
-    if (inode.fs->iops->mkdir == NULL) {
-        return -EPERM;
-    }
-
-    return inode.fs->iops->mkdir(&inode, name);
+    kfree_sync(mut_path);
+    return rc;
 }
 
 ssize_t sys_pipe(int filedes[2], size_t flags) {
