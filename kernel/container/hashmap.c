@@ -26,12 +26,13 @@ void hashmap_free(struct hashmap *hashmap) {
                 hashmap->free(hashmap->data[i]);
         }
     }
-    kfree(hashmap->data);
+    kfree_sync(hashmap->data);
     hashmap->data = NULL;
     hashmap->entries = 0;
     hashmap->buckets = 0;
 }
 
+// get_bucket cannot be used on a null hashmap.
 static size_t get_bucket(struct hashmap *hashmap, void const *value, bool allow_ts) {
     size_t index = hashmap->hash(value) % hashmap->buckets;
 
@@ -65,7 +66,7 @@ static void rehash(struct hashmap *hashmap, size_t new_buckets) {
     void **old_data = hashmap->data;
     size_t old_buckets = hashmap->buckets;
 
-    hashmap->data = kmalloc(new_buckets * sizeof(void *));
+    hashmap->data = kmalloc_sync(new_buckets * sizeof(void *));
     hashmap->buckets = new_buckets;
     hashmap->entries = 0;
     // Assume NULL == 0
@@ -77,7 +78,7 @@ static void rehash(struct hashmap *hashmap, size_t new_buckets) {
 
         insert_op(hashmap, old_data[i]);
     }
-    kfree(old_data);
+    kfree_sync(old_data);
 }
 
 void hashmap_insert_value(struct hashmap *hashmap, void *value) {
@@ -91,19 +92,25 @@ void hashmap_insert_value(struct hashmap *hashmap, void *value) {
 }
 
 void hashmap_delete_value(struct hashmap *hashmap, void *value) {
+    if (hashmap->buckets == 0)
+        return;
+
     void **ptr = hashmap->data + get_bucket(hashmap, value, false);
     if (ptr != empty)
         *ptr = tombstone;
 }
 
 bool hashmap_has_value(struct hashmap *hashmap, void *value) {
+    if (hashmap->buckets == 0)
+        return false;
+
     void *bucket = hashmap->data[get_bucket(hashmap, value, false)];
     return bucket != empty;
 }
 
 void hashmap_insert(struct hashmap *hashmap, void *key, void *value) {
     kassert(hashmap->free);
-    struct hashmap_entry *entry = kmalloc(sizeof(struct hashmap_entry));
+    struct hashmap_entry *entry = kmalloc_sync(sizeof(struct hashmap_entry));
     entry->key = key;
     entry->value = value;
     hashmap_insert_value(hashmap, entry);
@@ -117,9 +124,12 @@ void hashmap_delete(struct hashmap *hashmap, void *key) {
     hashmap_delete_value(hashmap, &entry);
 }
 
-void const *hashmap_get(struct hashmap *hashmap, void *key) {
+void *hashmap_get(struct hashmap *hashmap, void const *key) {
+    if (hashmap->buckets == 0)
+        return NULL;
+
     struct hashmap_entry lookup_entry = (struct hashmap_entry) {
-        .key = key,
+        .key = (void *)key,
         .value = NULL,
     };
     struct hashmap_entry *entry = hashmap->data[get_bucket(hashmap, &lookup_entry, false)];
@@ -128,6 +138,25 @@ void const *hashmap_get(struct hashmap *hashmap, void *key) {
         return NULL;
 
     return entry->value;
+}
+
+static void **real_entry(void **iter) {
+    while (iter != NULL && (*iter == empty || *iter == tombstone)) {
+        ++iter;
+    }
+    return iter;
+}
+
+void **hashmap_begin(struct hashmap *hashmap) {
+    return real_entry(hashmap->data);
+}
+
+void **hashmap_next(void **iter) {
+    return real_entry(++iter);
+}
+
+void **hashmap_end(struct hashmap *hashmap) {
+    return hashmap->data + hashmap->buckets;
 }
 
 // TODO: write real hash functions.

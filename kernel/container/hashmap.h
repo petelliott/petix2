@@ -31,7 +31,16 @@ bool hashmap_has_value(struct hashmap *hashmap, void *value);
 
 void hashmap_insert(struct hashmap *hashmap, void *key, void *value);
 void hashmap_delete(struct hashmap *hashmap, void *key);
-void const *hashmap_get(struct hashmap *hashmap, void *key);
+void *hashmap_get(struct hashmap *hashmap, void const *key);
+
+void **hashmap_begin(struct hashmap *hashmap);
+void **hashmap_next(void **iter);
+void **hashmap_end(struct hashmap *hashmap);
+
+#define hashmap_foreach(type, name, hashmap)                            \
+    void **_hmf_hashmap = (hashmap);                                    \
+    void **_hmf_iter = hashmap_begin(_hmf_hashmap);                     \
+    for (type name = *_hmf_iter; _hmf_iter < hashmap_end(_hmf_hashmap); _hmf_iter = hashmap_next(_hmf_iter), name = *_hmf_iter) \
 
 size_t ptr_value_hash(void const *);
 size_t ptr_key_hash(void const *);
