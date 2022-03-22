@@ -218,3 +218,8 @@ void kfree_sync(void *ptr) {
     kfree(ptr);
     release_lock(&memlock);
 }
+
+char *kstrdup_sync(char const *str) {
+    size_t len = strlen(str);
+    return memcpy(kmalloc_sync(len), str, len+1);
+}
