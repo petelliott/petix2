@@ -5,6 +5,7 @@
 
 #define O_DIRECTORY (1 << 0)
 #define O_CLOEXEC   (1 << 1)
+#define O_CREAT     (1 << 2)
 
 int open(const char *path, int flags, ...);
 

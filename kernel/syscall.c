@@ -83,7 +83,17 @@ ssize_t sys_open(const char *path, int flags, int mode) {
     struct inode in;
     err = fs_lookup(path, &in);
     if (err < 0) {
-        return err;
+        if (err == -ENOENT && flags & O_CREAT) {
+            err = sys_creat(path);
+            if (err < 0)
+                return err;
+
+            err = fs_lookup(path, &in);
+            if (err < 0)
+                return err;
+        } else {
+            return err;
+        }
     }
 
     int fd = alloc_fd(pcb);
