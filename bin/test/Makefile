@@ -1,6 +1,6 @@
 include ../../obj.mk
 
-OBJS = pipe cloexec ansi termios getopt fb pong
+OBJS = pipe cloexec ansi termios getopt fb pong write
 
 PROGS = $(patsubst %, $(ROOT)/bin/test/%, $(OBJS))
 
