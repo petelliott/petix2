@@ -53,7 +53,6 @@ struct inode {
     struct fs_inst *fs;
 };
 
-
 struct file {
     off_t offset;
     off_t size;
@@ -67,6 +66,7 @@ struct fs_inst {
     struct file file;
     petix_lock_t lock; //for use by the fs
     const struct inode_ops *iops;
+    void *private_data;
 };
 
 

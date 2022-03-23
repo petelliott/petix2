@@ -17,6 +17,7 @@
 #include "fs.h"
 #include "fs/tarfs.h"
 #include "fs/devfs.h"
+#include "fs/tmpfs.h"
 #include "device/fb.h"
 
 
@@ -58,7 +59,6 @@ void kmain(unsigned long magic, unsigned long addr) {
         }
     }
 
-
     struct inode in = {
         .ftype = FT_SPECIAL,
         .dev = MKDEV(DEV_INITRD, 0),
@@ -66,6 +66,7 @@ void kmain(unsigned long magic, unsigned long addr) {
 
     fs_mount("/", &in, get_tarfs());
     fs_mount("/dev", &in, get_devfs());
+    fs_mount("/tmp", &in, get_tmpfs());
 
     if (mbi->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         kprintf("found framebuffer %p\n",

@@ -12,7 +12,7 @@ void list_init(struct list *list, size_t item_size) {
 }
 
 void list_free(struct list *list) {
-    kfree(list_release(list));
+    kfree_sync(list_release(list));
 }
 
 void *list_release(struct list *list) {
@@ -32,7 +32,7 @@ void list_append(struct list *list, void const *item) {
     kassert(list->size <= list->cap);
     if (list->size == list->cap) {
         list->cap  = (list->cap)? 2*list->cap : 32;
-        list->data = krealloc(list->data, list->cap * list->item_size);
+        list->data = krealloc_sync(list->data, list->cap * list->item_size);
         kassert(list->data);
     }
     list->size++;

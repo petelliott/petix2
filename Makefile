@@ -7,7 +7,7 @@ export
 
 .PHONY: debug clean petix2.iso run run-iso release
 
-debug: CFLAGS+=-g3 -ggdb -Og
+debug: CFLAGS+=-g3 -ggdb -O0
 debug: subdir
 
 release: CFLAGS+=-O2 -s

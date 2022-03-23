@@ -14,6 +14,7 @@ static const char * const errtab[] = {
     [EAGAIN] = "Resource temporarily unavailable",
     [EACCES] = "Permission denied",
     [EFAULT] = "Bad address",
+    [EEXIST] = "File exists",
     [ENODEV] = "No such device",
     [ENOTDIR] = "Not a directory",
     [EISDIR] = "Is a directory",

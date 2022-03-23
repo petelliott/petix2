@@ -30,7 +30,7 @@ void *list_at(struct list *list, size_t index);
 
 #define list_foreach(type, name, list)                                  \
     size_t _i = 0;                                                      \
-    for (type name = list_at(&list, _i); _i < list.size; ++_i, name=list_at_unchecked(&list,_i))
+    for (type name = list_at(&(list), _i); _i < (list).size; ++_i, name=list_at_unchecked(&(list),_i))
 
 
 #endif

@@ -225,6 +225,8 @@ int fs_mount(const char *targ, struct inode *src, const struct inode_ops *fs) {
     node->mountpoint = true;
     fs_open(src, &(node->fs.file), 0);
     node->fs.iops = fs;
+    node->fs.private_data = NULL;
+    node->fs.lock = (petix_lock_t){0};
 
     release_lock(&mount_lock);
     return 0;
