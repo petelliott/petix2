@@ -223,7 +223,11 @@ int fs_mount(const char *targ, struct inode *src, const struct inode_ops *fs) {
 
     unmount_child(node->child);
     node->mountpoint = true;
-    fs_open(src, &(node->fs.file), 0);
+
+    if (src != NULL) {
+        fs_open(src, &(node->fs.file), 0);
+    }
+
     node->fs.iops = fs;
     node->fs.private_data = NULL;
     node->fs.lock = (petix_lock_t){0};

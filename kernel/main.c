@@ -65,8 +65,8 @@ void kmain(unsigned long magic, unsigned long addr) {
     };
 
     fs_mount("/", &in, get_tarfs());
-    fs_mount("/dev", &in, get_devfs());
-    fs_mount("/tmp", &in, get_tmpfs());
+    fs_mount("/dev", NULL, get_devfs());
+    fs_mount("/tmp", NULL, get_tmpfs());
 
     if (mbi->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         kprintf("found framebuffer %p\n",
