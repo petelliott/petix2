@@ -5,6 +5,7 @@ int fclose(FILE *stream) {
         stream->err = EBADF;
         return -1;
     }
+    fflush(stream);
     int ret = close(stream->fd);
     stream->valid = 0;
     if (ret == -1) {
