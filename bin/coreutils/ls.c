@@ -32,7 +32,11 @@ int main(int argc, char *argv[]) {
         }
         if (!dent.present) break;
 
-        printf("%s\n", dent.name);
+        if (dent.type == DT_DIR) {
+            printf("%s/\n", dent.name);
+        } else {
+            printf("%s\n", dent.name);
+        }
     }
 
     close(fd);
