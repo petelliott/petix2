@@ -25,6 +25,7 @@ static int getroot(struct fs_inst *fs, struct inode *in) {
 }
 
 static int getdent(struct file *f, struct petix_dirent *d) {
+    d->type = DT_SPECIAL;
     if (f->offset == 0) {
         d->inode_id = 0;
         d->present = true;

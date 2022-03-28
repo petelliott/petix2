@@ -77,6 +77,14 @@ int getdent(struct file *f, struct petix_dirent *d) {
         if (s == NULL || (s[0] == '/' && s[1] == '\0')) {
             d->inode_id = blk;
             d->present = true;
+
+            if (tar->typeflag == REGTYPE) {
+                d->type = DT_REGULAR;
+            } else if (tar->typeflag == DIRTYPE) {
+                d->type = DT_DIR;
+            } else if (tar->typeflag == CHRTYPE || tar->typeflag == BLKTYPE) {
+                d->type = DT_SPECIAL;
+            }
             strncpy(d->name, tar->name + prefix_len, sizeof(name));
 
             // remove trailing slash if present

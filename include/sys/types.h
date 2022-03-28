@@ -20,6 +20,12 @@ typedef uint32_t dev_t;
 struct petix_dirent {
     size_t inode_id;
     bool present;
+    enum {
+        DT_DIR,
+        DT_LINK,
+        DT_SPECIAL,
+        DT_REGULAR
+    } type;
     char name[FILE_NAME_LEN];
 };
 

@@ -226,6 +226,7 @@ static int tmp_getdent(struct file *f, struct petix_dirent *dirent) {
         struct tmpnode *child = (*entry)->value;
         dirent->inode_id = child->inode.inode_id;
         dirent->present = true;
+        dirent->type = child->inode.ftype;
         strncpy(dirent->name, (char *) (*entry)->key, FILE_NAME_LEN);
 
         f->offset = hashmap_next((void **)entry) - start_iter;
