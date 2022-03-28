@@ -79,6 +79,10 @@ int getdent(struct file *f, struct petix_dirent *d) {
             d->present = true;
             strncpy(d->name, tar->name + prefix_len, sizeof(name));
 
+            // remove trailing slash if present
+            char *save;
+            strtok_r(d->name, "/", &save);
+
             blk = tar_next_blk(tar, blk);
             f->offset = blk*TAR_BLOCKSIZE - f->private_data;
 
